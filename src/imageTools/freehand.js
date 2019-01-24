@@ -36,7 +36,7 @@ let configuration = {
   },
   keyDown: {
     shift: false,
-    ctrl: false,
+    ctrl: true,
     alt: false
   },
   activePencilMode: false,
@@ -957,9 +957,9 @@ function onImageRendered (e) {
         }
 
         const text = textBoxText(data);
-
-        drawLinkedTextBox(context, element, data.textBox, text,
-          data.handles, textBoxAnchorPoints, color, lineWidth, 0, true);
+        /* Sangkeun Kim */
+//        drawLinkedTextBox(context, element, data.textBox, text,
+//          data.handles, textBoxAnchorPoints, color, lineWidth, 0, true);
       }
     });
   }
