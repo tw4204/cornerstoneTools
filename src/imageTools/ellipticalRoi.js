@@ -184,7 +184,7 @@ function onImageRendered (e) {
   }
 
   function textBoxText (data) {
-    const { meanStdDev, meanStdDevSUV, area } = data;
+    const { meanStdDev, meanStdDevSUV, area, extra } = data;
 
     // Define an array to store the rows of text for the textbox
     const textLines = [];
@@ -232,6 +232,10 @@ function onImageRendered (e) {
 
       // Add this text line to the array to be displayed in the textbox
       textLines.push(areaText);
+    }
+
+    if (extra) {
+      textLines.push(extra);
     }
 
     return textLines;

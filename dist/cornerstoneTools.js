@@ -1,4 +1,4 @@
-/*! cornerstone-tools - 2.5.0 - 2019-03-19 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
+/*! cornerstone-tools - 2.5.0 - 2019-05-09 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	}
 /******/
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "a5c375e895a85cbc40e8"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "bf81d450d915ae055cab"; // eslint-disable-line no-unused-vars
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
@@ -2599,7 +2599,8 @@ function onImageRendered(e) {
   function textBoxText(data) {
     var meanStdDev = data.meanStdDev,
         meanStdDevSUV = data.meanStdDevSUV,
-        area = data.area;
+        area = data.area,
+        extra = data.extra;
 
     // Define an array to store the rows of text for the textbox
 
@@ -2648,6 +2649,10 @@ function onImageRendered(e) {
 
       // Add this text line to the array to be displayed in the textbox
       textLines.push(areaText);
+    }
+
+    if (extra) {
+      textLines.push(extra);
     }
 
     return textLines;
