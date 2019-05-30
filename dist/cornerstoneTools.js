@@ -1,4 +1,4 @@
-/*! cornerstone-tools - 2.5.0 - 2019-05-09 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
+/*! cornerstone-tools - 2.5.0 - 2019-05-30 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	}
 /******/
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "bf81d450d915ae055cab"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "9f085580802d270afd0e"; // eslint-disable-line no-unused-vars
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
@@ -7636,6 +7636,458 @@ exports.default = rotateTouch;
 
 /***/ }),
 
+/***/ "./imageTools/rotatedEllipticalRoi.js":
+/*!********************************************!*\
+  !*** ./imageTools/rotatedEllipticalRoi.js ***!
+  \********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.rotatedEllipticalRoiTouch = exports.rotatedEllipticalRoi = undefined;
+
+var _externalModules = __webpack_require__(/*! ../externalModules.js */ "./externalModules.js");
+
+var _externalModules2 = _interopRequireDefault(_externalModules);
+
+var _mouseButtonTool = __webpack_require__(/*! ./mouseButtonTool.js */ "./imageTools/mouseButtonTool.js");
+
+var _mouseButtonTool2 = _interopRequireDefault(_mouseButtonTool);
+
+var _touchTool = __webpack_require__(/*! ./touchTool.js */ "./imageTools/touchTool.js");
+
+var _touchTool2 = _interopRequireDefault(_touchTool);
+
+var _toolStyle = __webpack_require__(/*! ../stateManagement/toolStyle.js */ "./stateManagement/toolStyle.js");
+
+var _toolStyle2 = _interopRequireDefault(_toolStyle);
+
+var _toolColors = __webpack_require__(/*! ../stateManagement/toolColors.js */ "./stateManagement/toolColors.js");
+
+var _toolColors2 = _interopRequireDefault(_toolColors);
+
+var _drawHandles = __webpack_require__(/*! ../manipulators/drawHandles.js */ "./manipulators/drawHandles.js");
+
+var _drawHandles2 = _interopRequireDefault(_drawHandles);
+
+var _pointInEllipse = __webpack_require__(/*! ../util/pointInEllipse.js */ "./util/pointInEllipse.js");
+
+var _pointInEllipse2 = _interopRequireDefault(_pointInEllipse);
+
+var _calculateEllipseStatistics = __webpack_require__(/*! ../util/calculateEllipseStatistics.js */ "./util/calculateEllipseStatistics.js");
+
+var _calculateEllipseStatistics2 = _interopRequireDefault(_calculateEllipseStatistics);
+
+var _calculateSUV = __webpack_require__(/*! ../util/calculateSUV.js */ "./util/calculateSUV.js");
+
+var _calculateSUV2 = _interopRequireDefault(_calculateSUV);
+
+var _triggerMeasurementCompletedEvent = __webpack_require__(/*! ../util/triggerMeasurementCompletedEvent.js */ "./util/triggerMeasurementCompletedEvent.js");
+
+var _triggerMeasurementCompletedEvent2 = _interopRequireDefault(_triggerMeasurementCompletedEvent);
+
+var _drawLinkedTextBox = __webpack_require__(/*! ../util/drawLinkedTextBox.js */ "./util/drawLinkedTextBox.js");
+
+var _drawLinkedTextBox2 = _interopRequireDefault(_drawLinkedTextBox);
+
+var _toolState = __webpack_require__(/*! ../stateManagement/toolState.js */ "./stateManagement/toolState.js");
+
+var _drawing = __webpack_require__(/*! ../util/drawing.js */ "./util/drawing.js");
+
+var _getColRowPixelSpacing = __webpack_require__(/*! ../util/getColRowPixelSpacing.js */ "./util/getColRowPixelSpacing.js");
+
+var _getColRowPixelSpacing2 = _interopRequireDefault(_getColRowPixelSpacing);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var toolType = 'rotatedEllipticalRoi';
+
+// /////// BEGIN ACTIVE TOOL ///////
+function createNewMeasurement(mouseEventData) {
+  // Create the measurement data for this tool with the end handle activated
+  var measurementData = {
+    visible: true,
+    active: true,
+    invalidated: true,
+    color: undefined,
+    handles: {
+      start: {
+        x: mouseEventData.currentPoints.image.x,
+        y: mouseEventData.currentPoints.image.y,
+        highlight: true,
+        active: false
+      },
+      end: {
+        x: mouseEventData.currentPoints.image.x,
+        y: mouseEventData.currentPoints.image.y,
+        highlight: true,
+        active: true
+      },
+      textBox: {
+        active: false,
+        hasMoved: false,
+        movesIndependently: false,
+        drawnIndependently: true,
+        allowedOutsideImage: true,
+        hasBoundingBox: true
+      }
+    }
+  };
+
+  return measurementData;
+}
+// /////// END ACTIVE TOOL ///////
+
+// /////// BEGIN IMAGE RENDERING ///////
+function pointNearEllipse(element, data, coords, distance) {
+  if (data.visible === false) {
+    return false;
+  }
+
+  var cornerstone = _externalModules2.default.cornerstone;
+  var startCanvas = cornerstone.pixelToCanvas(element, data.handles.start);
+  var endCanvas = cornerstone.pixelToCanvas(element, data.handles.end);
+
+  var minorEllipse = {
+    left: Math.min(startCanvas.x, endCanvas.x) + distance / 2,
+    top: Math.min(startCanvas.y, endCanvas.y) + distance / 2,
+    width: Math.abs(startCanvas.x - endCanvas.x) - distance,
+    height: Math.abs(startCanvas.y - endCanvas.y) - distance
+  };
+
+  var majorEllipse = {
+    left: Math.min(startCanvas.x, endCanvas.x) - distance / 2,
+    top: Math.min(startCanvas.y, endCanvas.y) - distance / 2,
+    width: Math.abs(startCanvas.x - endCanvas.x) + distance,
+    height: Math.abs(startCanvas.y - endCanvas.y) + distance
+  };
+
+  var pointInMinorEllipse = (0, _pointInEllipse2.default)(minorEllipse, coords);
+  var pointInMajorEllipse = (0, _pointInEllipse2.default)(majorEllipse, coords);
+
+  if (pointInMajorEllipse && !pointInMinorEllipse) {
+    return true;
+  }
+
+  return false;
+}
+
+function pointNearTool(element, data, coords) {
+  return pointNearEllipse(element, data, coords, 15);
+}
+
+function pointNearToolTouch(element, data, coords) {
+  return pointNearEllipse(element, data, coords, 25);
+}
+
+function numberWithCommas(x) {
+  // http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
+  var parts = x.toString().split('.');
+
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  return parts.join('.');
+}
+
+function onImageRendered(e) {
+  var eventData = e.detail;
+
+  // If we have no toolData for this element, return immediately as there is nothing to do
+  var toolData = (0, _toolState.getToolState)(e.currentTarget, toolType);
+
+  if (!toolData) {
+    return;
+  }
+
+  var cornerstone = _externalModules2.default.cornerstone;
+  var image = eventData.image;
+  var element = eventData.element;
+  var lineWidth = _toolStyle2.default.getToolWidth();
+  var config = rotatedEllipticalRoi.getConfiguration();
+  var seriesModule = cornerstone.metaData.get('generalSeriesModule', image.imageId);
+  var modality = void 0;
+
+  var _getColRowPixelSpacin = (0, _getColRowPixelSpacing2.default)(eventData.image),
+      rowPixelSpacing = _getColRowPixelSpacin.rowPixelSpacing,
+      colPixelSpacing = _getColRowPixelSpacin.colPixelSpacing;
+
+  if (seriesModule) {
+    modality = seriesModule.modality;
+  }
+
+  var context = (0, _drawing.getNewContext)(eventData.canvasContext.canvas);
+
+  // If we have tool data for this element - iterate over each set and draw it
+
+  var _loop = function _loop(i) {
+    var data = toolData.data[i];
+
+    if (data.visible === false) {
+      return 'continue';
+    }
+
+    (0, _drawing.draw)(context, function (context) {
+      // Apply any shadow settings defined in the tool configuration
+      (0, _drawing.setShadow)(context, config);
+
+      // Check which color the rendered tool should be
+      var color = _toolColors2.default.getColorIfActive(data);
+
+      // Draw the ellipse on the canvas
+      (0, _drawing.drawEllipse)(context, element, data.handles.start, data.handles.end, { color: color });
+
+      // If the tool configuration specifies to only draw the handles on hover / active,
+      // Follow this logic
+      if (config && config.drawHandlesOnHover) {
+        // Draw the handles if the tool is active
+        if (data.active === true) {
+          (0, _drawHandles2.default)(context, eventData, data.handles, color);
+        } else {
+          // If the tool is inactive, draw the handles only if each specific handle is being
+          // Hovered over
+          var handleOptions = {
+            drawHandlesIfActive: true
+          };
+
+          (0, _drawHandles2.default)(context, eventData, data.handles, color, handleOptions);
+        }
+      } else {
+        // If the tool has no configuration settings, always draw the handles
+        (0, _drawHandles2.default)(context, eventData, data.handles, color);
+      }
+
+      calculateStatistics(data, element, image, modality, rowPixelSpacing, colPixelSpacing);
+
+      // If the textbox has not been moved by the user, it should be displayed on the right-most
+      // Side of the tool.
+      if (!data.handles.textBox.hasMoved) {
+        // Find the rightmost side of the ellipse at its vertical center, and place the textbox here
+        // Note that this calculates it in image coordinates
+        data.handles.textBox.x = Math.max(data.handles.start.x, data.handles.end.x);
+        data.handles.textBox.y = (data.handles.start.y + data.handles.end.y) / 2;
+      }
+
+      var text = textBoxText(data);
+
+      (0, _drawLinkedTextBox2.default)(context, element, data.handles.textBox, text, data.handles, textBoxAnchorPoints, color, lineWidth, 0, true);
+    });
+  };
+
+  for (var i = 0; i < toolData.data.length; i++) {
+    var _ret = _loop(i);
+
+    if (_ret === 'continue') continue;
+  }
+
+  function textBoxText(data) {
+    var meanStdDev = data.meanStdDev,
+        meanStdDevSUV = data.meanStdDevSUV,
+        area = data.area,
+        extra = data.extra;
+
+    // Define an array to store the rows of text for the textbox
+
+    var textLines = [];
+
+    // If the mean and standard deviation values are present, display them
+    if (meanStdDev && meanStdDev.mean !== undefined) {
+      // If the modality is CT, add HU to denote Hounsfield Units
+      var moSuffix = '';
+
+      if (modality === 'CT') {
+        moSuffix = ' HU';
+      }
+
+      // Create a line of text to display the mean and any units that were specified (i.e. HU)
+      var meanText = 'Mean: ' + numberWithCommas(meanStdDev.mean.toFixed(2)) + moSuffix;
+      // Create a line of text to display the standard deviation and any units that were specified (i.e. HU)
+      var stdDevText = 'StdDev: ' + numberWithCommas(meanStdDev.stdDev.toFixed(2)) + moSuffix;
+
+      // If this image has SUV values to display, concatenate them to the text line
+      if (meanStdDevSUV && meanStdDevSUV.mean !== undefined) {
+        var SUVtext = ' SUV: ';
+
+        meanText += SUVtext + numberWithCommas(meanStdDevSUV.mean.toFixed(2));
+        stdDevText += SUVtext + numberWithCommas(meanStdDevSUV.stdDev.toFixed(2));
+      }
+
+      // Add these text lines to the array to be displayed in the textbox
+      textLines.push(meanText);
+      textLines.push(stdDevText);
+    }
+
+    // If the area is a sane value, display it
+    if (area) {
+      // Determine the area suffix based on the pixel spacing in the image.
+      // If pixel spacing is present, use millimeters. Otherwise, use pixels.
+      // This uses Char code 178 for a superscript 2
+      var suffix = ' mm' + String.fromCharCode(178);
+
+      if (!rowPixelSpacing || !colPixelSpacing) {
+        suffix = ' pixels' + String.fromCharCode(178);
+      }
+
+      // Create a line of text to display the area and its units
+      var areaText = 'Area: ' + numberWithCommas(area.toFixed(2)) + suffix;
+
+      // Add this text line to the array to be displayed in the textbox
+      textLines.push(areaText);
+    }
+
+    if (extra) {
+      textLines.push(extra);
+    }
+
+    return textLines;
+  }
+
+  function textBoxAnchorPoints(handles) {
+    // Retrieve the bounds of the ellipse (left, top, width, and height)
+    var left = Math.min(handles.start.x, handles.end.x);
+    var top = Math.min(handles.start.y, handles.end.y);
+    var width = Math.abs(handles.start.x - handles.end.x);
+    var height = Math.abs(handles.start.y - handles.end.y);
+
+    return [{
+      // Top middle point of ellipse
+      x: left + width / 2,
+      y: top
+    }, {
+      // Left middle point of ellipse
+      x: left,
+      y: top + height / 2
+    }, {
+      // Bottom middle point of ellipse
+      x: left + width / 2,
+      y: top + height
+    }, {
+      // Right middle point of ellipse
+      x: left + width,
+      y: top + height / 2
+    }];
+  }
+}
+// /////// END IMAGE RENDERING ///////
+
+function calculateStatistics(data, element, image, modality, rowPixelSpacing, colPixelSpacing) {
+  var cornerstone = _externalModules2.default.cornerstone;
+  // Define variables for the area and mean/standard deviation
+  var area = void 0,
+      meanStdDev = void 0,
+      meanStdDevSUV = void 0;
+
+  // Perform a check to see if the tool has been invalidated. This is to prevent
+  // Unnecessary re-calculation of the area, mean, and standard deviation if the
+  // Image is re-rendered but the tool has not moved (e.g. during a zoom)
+  if (data.invalidated === false) {
+    // If the data is not invalidated, retrieve it from the toolData
+    meanStdDev = data.meanStdDev;
+    meanStdDevSUV = data.meanStdDevSUV;
+    area = data.area;
+  } else {
+    // If the data has been invalidated, we need to calculate it again
+
+    // Retrieve the bounds of the ellipse in image coordinates
+    var ellipse = {
+      left: Math.round(Math.min(data.handles.start.x, data.handles.end.x)),
+      top: Math.round(Math.min(data.handles.start.y, data.handles.end.y)),
+      width: Math.round(Math.abs(data.handles.start.x - data.handles.end.x)),
+      height: Math.round(Math.abs(data.handles.start.y - data.handles.end.y))
+    };
+
+    // First, make sure this is not a color image, since no mean / standard
+    // Deviation will be calculated for color images.
+    if (!image.color) {
+      // Retrieve the array of pixels that the ellipse bounds cover
+      var pixels = cornerstone.getPixels(element, ellipse.left, ellipse.top, ellipse.width, ellipse.height);
+
+      // Calculate the mean & standard deviation from the pixels and the ellipse details
+      meanStdDev = (0, _calculateEllipseStatistics2.default)(pixels, ellipse);
+
+      if (modality === 'PT') {
+        // If the image is from a PET scan, use the DICOM tags to
+        // Calculate the SUV from the mean and standard deviation.
+
+        // Note that because we are using modality pixel values from getPixels, and
+        // The calculateSUV routine also rescales to modality pixel values, we are first
+        // Returning the values to storedPixel values before calcuating SUV with them.
+        // TODO: Clean this up? Should we add an option to not scale in calculateSUV?
+        meanStdDevSUV = {
+          mean: (0, _calculateSUV2.default)(image, (meanStdDev.mean - image.intercept) / image.slope),
+          stdDev: (0, _calculateSUV2.default)(image, (meanStdDev.stdDev - image.intercept) / image.slope)
+        };
+      }
+
+      // If the mean and standard deviation values are sane, store them for later retrieval
+      if (meanStdDev && !isNaN(meanStdDev.mean)) {
+        data.meanStdDev = meanStdDev;
+        data.meanStdDevSUV = meanStdDevSUV;
+      }
+    }
+
+    // Calculate the image area from the ellipse dimensions and pixel spacing
+    area = Math.PI * (ellipse.width * (colPixelSpacing || 1) / 2) * (ellipse.height * (rowPixelSpacing || 1) / 2);
+
+    // If the area value is sane, store it for later retrieval
+    if (!isNaN(area)) {
+      data.area = area;
+
+      data.unit = 'mm' + String.fromCharCode(178);
+      if (!rowPixelSpacing || !colPixelSpacing) {
+        data.unit = 'pixels' + String.fromCharCode(178);
+      }
+    }
+
+    // Set the invalidated flag to false so that this data won't automatically be recalculated
+    data.invalidated = false;
+  }
+}
+
+function onHandleDoneMove(element, data) {
+  var image = _externalModules2.default.cornerstone.getImage(element);
+  var seriesModule = _externalModules2.default.cornerstone.metaData.get('generalSeriesModule', image.imageId);
+  var modality = void 0;
+
+  var _getColRowPixelSpacin2 = (0, _getColRowPixelSpacing2.default)(image),
+      rowPixelSpacing = _getColRowPixelSpacin2.rowPixelSpacing,
+      colPixelSpacing = _getColRowPixelSpacin2.colPixelSpacing;
+
+  if (seriesModule) {
+    modality = seriesModule.modality;
+  }
+
+  calculateStatistics(data, element, image, modality, rowPixelSpacing, colPixelSpacing);
+
+  (0, _triggerMeasurementCompletedEvent2.default)(element, data, toolType);
+}
+
+// Module exports
+var rotatedEllipticalRoi = (0, _mouseButtonTool2.default)({
+  createNewMeasurement: createNewMeasurement,
+  onImageRendered: onImageRendered,
+  pointNearTool: pointNearTool,
+  toolType: toolType,
+  onHandleDoneMove: onHandleDoneMove
+});
+
+var rotatedEllipticalRoiTouch = (0, _touchTool2.default)({
+  createNewMeasurement: createNewMeasurement,
+  onImageRendered: onImageRendered,
+  pointNearTool: pointNearToolTouch,
+  toolType: toolType,
+  onHandleDoneMove: onHandleDoneMove
+});
+
+exports.rotatedEllipticalRoi = rotatedEllipticalRoi;
+exports.rotatedEllipticalRoiTouch = rotatedEllipticalRoiTouch;
+
+/***/ }),
+
 /***/ "./imageTools/saveAs.js":
 /*!******************************!*\
   !*** ./imageTools/saveAs.js ***!
@@ -7840,6 +8292,17 @@ function onImageRendered(e) {
   } else {
     rowPixelSpacing = image.rowPixelSpacing;
     colPixelSpacing = image.columnPixelSpacing;
+  }
+
+  if (!rowPixelSpacing || !colPixelSpacing) {
+    var pixelSpacing = image.data.string('x00181164');
+    var r = pixelSpacing.split('\\');
+
+    if (r.length !== 2) {
+      return;
+    }
+    rowPixelSpacing = Number(r[0]);
+    colPixelSpacing = Number(r[1]);
   }
 
   // Check whether pixel spacing is defined
@@ -10772,7 +11235,7 @@ exports.zoomTouchDrag = zoomTouchDrag;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getToolOptions = exports.setToolOptions = exports.version = exports.adaptiveBrush = exports.brush = exports.zoomTouchDrag = exports.zoomTouchPinch = exports.zoomWheel = exports.zoom = exports.wwwcRegionTouch = exports.wwwcRegion = exports.wwwcTouchDrag = exports.wwwc = exports.touchTool = exports.touchPinchTool = exports.touchDragTool = exports.textMarkerTouch = exports.textMarker = exports.simpleMouseButtonTool = exports.simpleAngleTouch = exports.simpleAngle = exports.seedAnnotateTouch = exports.seedAnnotate = exports.scaleOverlayTool = exports.saveAs = exports.rotateTouch = exports.rotateTouchDrag = exports.rotate = exports.rectangleRoiTouch = exports.rectangleRoi = exports.probeTouch = exports.probe = exports.panMultiTouch = exports.panTouchDrag = exports.pan = exports.orientationMarkers = exports.multiTouchDragTool = exports.mouseWheelTool = exports.mouseButtonTool = exports.mouseButtonRectangleTool = exports.magnifyTouchDrag = exports.magnify = exports.lengthTouch = exports.length = exports.keyboardTool = exports.imageStats = exports.highlightTouch = exports.highlight = exports.freehandSculpter = exports.freehand = exports.eraserTouch = exports.eraser = exports.ellipticalRoiTouch = exports.ellipticalRoi = exports.dragProbeTouch = undefined;
+exports.getToolOptions = exports.setToolOptions = exports.version = exports.adaptiveBrush = exports.brush = exports.zoomTouchDrag = exports.zoomTouchPinch = exports.zoomWheel = exports.zoom = exports.wwwcRegionTouch = exports.wwwcRegion = exports.wwwcTouchDrag = exports.wwwc = exports.touchTool = exports.touchPinchTool = exports.touchDragTool = exports.textMarkerTouch = exports.textMarker = exports.simpleMouseButtonTool = exports.simpleAngleTouch = exports.simpleAngle = exports.seedAnnotateTouch = exports.seedAnnotate = exports.scaleOverlayTool = exports.saveAs = exports.rotateTouch = exports.rotateTouchDrag = exports.rotate = exports.rectangleRoiTouch = exports.rectangleRoi = exports.probeTouch = exports.probe = exports.panMultiTouch = exports.panTouchDrag = exports.pan = exports.orientationMarkers = exports.multiTouchDragTool = exports.mouseWheelTool = exports.mouseButtonTool = exports.mouseButtonRectangleTool = exports.magnifyTouchDrag = exports.magnify = exports.lengthTouch = exports.length = exports.keyboardTool = exports.imageStats = exports.highlightTouch = exports.highlight = exports.freehandSculpter = exports.freehand = exports.eraserTouch = exports.eraser = exports.rotatedEllipticalRoiTouch = exports.rotatedEllipticalRoi = exports.ellipticalRoiTouch = exports.ellipticalRoi = exports.dragProbeTouch = undefined;
 exports.dragProbe = exports.doubleTapZoom = exports.doubleTapTool = exports.displayTool = exports.crosshairsTouch = exports.crosshairs = exports.arrowAnnotateTouch = exports.arrowAnnotate = exports.angleTouch = exports.angle = exports.touchInput = exports.preventGhostClick = exports.mouseWheelInput = exports.mouseInput = exports.keyboardInput = exports.touchMoveHandle = exports.touchMoveAllHandles = exports.moveNewHandleTouch = exports.moveNewHandle = exports.moveHandle = exports.moveAllHandles = exports.handleActivator = exports.getHandleNearImagePoint = exports.drawHandles = exports.anyHandlesOutsideImage = exports.stopClip = exports.playClip = exports.stackRenderers = exports.scrollIndicator = exports.stackPrefetch = exports.stackScrollMultiTouch = exports.stackScrollTouchDrag = exports.stackScrollWheel = exports.stackScroll = exports.stackScrollKeyboard = exports.appState = exports.globalFrameOfReferenceSpecificToolStateManager = exports.newFrameOfReferenceSpecificToolStateManager = exports.globalImageIdSpecificToolStateManager = exports.newImageIdSpecificToolStateManager = exports.loadHandlerManager = exports.addStackStateManager = exports.newStackSpecificToolStateManager = exports.stackSpecificStateManager = exports.textStyle = exports.newTimeSeriesSpecificToolStateManager = exports.addTimeSeriesStateManager = exports.toolColors = exports.toolCoordinates = exports.getElementToolStateManager = exports.setElementToolStateManager = exports.clearToolState = exports.removeToolState = exports.getToolState = exports.addToolState = exports.toolStyle = exports.panZoomSynchronizer = exports.stackImageIndexSynchronizer = exports.stackImagePositionOffsetSynchronizer = exports.stackImagePositionSynchronizer = exports.stackScrollSynchronizer = exports.Synchronizer = exports.updateImageSynchronizer = exports.wwwcSynchronizer = exports.timeSeriesScrollTouchDrag = exports.timeSeriesScrollWheel = exports.timeSeriesScroll = exports.timeSeriesPlayer = exports.incrementTimePoint = exports.probeTool4D = exports.calculateEllipseStatistics = exports.calculateSUV = exports.copyPoints = exports.drawArrow = exports.drawCircle = exports.drawEllipse = exports.drawTextBox = exports.getLuminance = exports.isMobileDevice = exports.getBrowserInfo = exports.getMaxSimultaneousRequests = exports.getDefaultSimultaneousRequests = exports.getRGBPixels = exports.isMouseButtonEnabled = exports.makeUnselectable = exports.pointInEllipse = exports.pointInsideBoundingBox = exports.planePlaneIntersection = exports.imagePointToPatientPoint = exports.projectPatientPointToImagePlane = exports.roundToDecimal = exports.scroll = exports.scrollToIndex = exports.setContextToDisplayFontSize = exports.requestPoolManager = exports.orientation = exports.referenceLines = exports.EVENTS = exports.external = exports.drawing = undefined;
 
 var _externalModules = __webpack_require__(/*! ./externalModules.js */ "./externalModules.js");
@@ -11612,6 +12075,21 @@ Object.defineProperty(exports, 'ellipticalRoiTouch', {
   enumerable: true,
   get: function get() {
     return _ellipticalRoi.ellipticalRoiTouch;
+  }
+});
+
+var _rotatedEllipticalRoi = __webpack_require__(/*! ./imageTools/rotatedEllipticalRoi.js */ "./imageTools/rotatedEllipticalRoi.js");
+
+Object.defineProperty(exports, 'rotatedEllipticalRoi', {
+  enumerable: true,
+  get: function get() {
+    return _rotatedEllipticalRoi.rotatedEllipticalRoi;
+  }
+});
+Object.defineProperty(exports, 'rotatedEllipticalRoiTouch', {
+  enumerable: true,
+  get: function get() {
+    return _rotatedEllipticalRoi.rotatedEllipticalRoiTouch;
   }
 });
 

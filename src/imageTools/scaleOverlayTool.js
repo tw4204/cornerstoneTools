@@ -127,6 +127,17 @@ function onImageRendered (e) {
     colPixelSpacing = image.columnPixelSpacing;
   }
 
+  if (!rowPixelSpacing || !colPixelSpacing) {
+    const pixelSpacing = image.data.string('x00181164');
+    const r = pixelSpacing.split('\\');
+
+    if (r.length !== 2) {
+      return;
+    }
+    rowPixelSpacing = Number(r[0]);
+    colPixelSpacing = Number(r[1]);
+  }
+
   // Check whether pixel spacing is defined
   if (!rowPixelSpacing || !colPixelSpacing) {
     return;

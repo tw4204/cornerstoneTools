@@ -33,6 +33,7 @@
                 <a id="enableLength" class="list-group-item">Length</a>
                 <a id="probe" class="list-group-item">Probe</a>
                 <a id="circleroi" class="list-group-item">Elliptical ROI</a>
+                <a id="rotatedEllipticalRoi" class="list-group-item">Rotated Elliptical ROI</a>
                 <a id="rectangleroi" class="list-group-item">Rectangle ROI</a>
                 <a id="angle" class="list-group-item">Angle</a>
                 <a id="highlight" class="list-group-item">Highlight</a>
@@ -224,6 +225,7 @@
         cornerstoneTools.probe.enable(element);
         cornerstoneTools.length.enable(element);
         cornerstoneTools.ellipticalRoi.enable(element);
+        cornerstoneTools.rotatedEllipticalRoi.enable(element);
         cornerstoneTools.rectangleRoi.enable(element);
         cornerstoneTools.angle.enable(element);
         cornerstoneTools.highlight.enable(element);
@@ -249,6 +251,7 @@
             cornerstoneTools.probe.deactivate(element, 1);
             cornerstoneTools.length.deactivate(element, 1);
             cornerstoneTools.ellipticalRoi.deactivate(element, 1);
+            cornerstoneTools.rotatedEllipticalRoi.deactivate(element, 1);
             cornerstoneTools.rectangleRoi.deactivate(element, 1);
             cornerstoneTools.angle.deactivate(element, 1);
             cornerstoneTools.highlight.deactivate(element, 1);
@@ -286,6 +289,11 @@
             activate('circleroi')
             disableAllTools();
             cornerstoneTools.ellipticalRoi.activate(element, 1);
+        });
+        document.getElementById('rotatedEllipticalRoi').addEventListener('click', function() {
+            activate('rotatedEllipticalRoi')
+            disableAllTools();
+            cornerstoneTools.rotatedEllipticalRoi.activate(element, 1);
         });
         document.getElementById('rectangleroi').addEventListener('click', function() {
             activate('rectangleroi')
