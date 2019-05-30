@@ -1,4 +1,4 @@
-/*! cornerstone-tools - 2.5.0 - 2019-05-30 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
+/*! cornerstone-tools - 2.5.0 - 2019-05-31 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	}
 /******/
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "9f085580802d270afd0e"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "5f6959034d356dd80dcd"; // eslint-disable-line no-unused-vars
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
@@ -7651,6 +7651,10 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.rotatedEllipticalRoiTouch = exports.rotatedEllipticalRoi = undefined;
 
+var _events = __webpack_require__(/*! ../events.js */ "./events.js");
+
+var _events2 = _interopRequireDefault(_events);
+
 var _externalModules = __webpack_require__(/*! ../externalModules.js */ "./externalModules.js");
 
 var _externalModules2 = _interopRequireDefault(_externalModules);
@@ -7667,6 +7671,14 @@ var _toolStyle = __webpack_require__(/*! ../stateManagement/toolStyle.js */ "./s
 
 var _toolStyle2 = _interopRequireDefault(_toolStyle);
 
+var _toolCoordinates = __webpack_require__(/*! ../stateManagement/toolCoordinates.js */ "./stateManagement/toolCoordinates.js");
+
+var _toolCoordinates2 = _interopRequireDefault(_toolCoordinates);
+
+var _handleActivator = __webpack_require__(/*! ../manipulators/handleActivator.js */ "./manipulators/handleActivator.js");
+
+var _handleActivator2 = _interopRequireDefault(_handleActivator);
+
 var _toolColors = __webpack_require__(/*! ../stateManagement/toolColors.js */ "./stateManagement/toolColors.js");
 
 var _toolColors2 = _interopRequireDefault(_toolColors);
@@ -7675,13 +7687,21 @@ var _drawHandles = __webpack_require__(/*! ../manipulators/drawHandles.js */ "./
 
 var _drawHandles2 = _interopRequireDefault(_drawHandles);
 
-var _pointInEllipse = __webpack_require__(/*! ../util/pointInEllipse.js */ "./util/pointInEllipse.js");
+var _getHandleNearImagePoint = __webpack_require__(/*! ../manipulators/getHandleNearImagePoint.js */ "./manipulators/getHandleNearImagePoint.js");
 
-var _pointInEllipse2 = _interopRequireDefault(_pointInEllipse);
+var _getHandleNearImagePoint2 = _interopRequireDefault(_getHandleNearImagePoint);
+
+var _pointInRotatedEllipse = __webpack_require__(/*! ../util/pointInRotatedEllipse.js */ "./util/pointInRotatedEllipse.js");
+
+var _pointInRotatedEllipse2 = _interopRequireDefault(_pointInRotatedEllipse);
 
 var _calculateEllipseStatistics = __webpack_require__(/*! ../util/calculateEllipseStatistics.js */ "./util/calculateEllipseStatistics.js");
 
 var _calculateEllipseStatistics2 = _interopRequireDefault(_calculateEllipseStatistics);
+
+var _isMouseButtonEnabled = __webpack_require__(/*! ../util/isMouseButtonEnabled.js */ "./util/isMouseButtonEnabled.js");
+
+var _isMouseButtonEnabled2 = _interopRequireDefault(_isMouseButtonEnabled);
 
 var _calculateSUV = __webpack_require__(/*! ../util/calculateSUV.js */ "./util/calculateSUV.js");
 
@@ -7695,6 +7715,24 @@ var _drawLinkedTextBox = __webpack_require__(/*! ../util/drawLinkedTextBox.js */
 
 var _drawLinkedTextBox2 = _interopRequireDefault(_drawLinkedTextBox);
 
+var _moveNewHandle = __webpack_require__(/*! ../manipulators/moveNewHandle.js */ "./manipulators/moveNewHandle.js");
+
+var _moveNewHandle2 = _interopRequireDefault(_moveNewHandle);
+
+var _moveAllHandles = __webpack_require__(/*! ../manipulators/moveAllHandles.js */ "./manipulators/moveAllHandles.js");
+
+var _moveAllHandles2 = _interopRequireDefault(_moveAllHandles);
+
+var _anyHandlesOutsideImage = __webpack_require__(/*! ../manipulators/anyHandlesOutsideImage.js */ "./manipulators/anyHandlesOutsideImage.js");
+
+var _anyHandlesOutsideImage2 = _interopRequireDefault(_anyHandlesOutsideImage);
+
+var _movePerpendicularHandle = __webpack_require__(/*! ../manipulators/movePerpendicularHandle.js */ "./manipulators/movePerpendicularHandle.js");
+
+var _movePerpendicularHandle2 = _interopRequireDefault(_movePerpendicularHandle);
+
+var _toolOptions = __webpack_require__(/*! ../toolOptions.js */ "./toolOptions.js");
+
 var _toolState = __webpack_require__(/*! ../stateManagement/toolState.js */ "./stateManagement/toolState.js");
 
 var _drawing = __webpack_require__(/*! ../util/drawing.js */ "./util/drawing.js");
@@ -7705,9 +7743,35 @@ var _getColRowPixelSpacing2 = _interopRequireDefault(_getColRowPixelSpacing);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var toolType = 'rotatedEllipticalRoi';
+var toolType = "rotatedEllipticalRoi";
 
 // /////// BEGIN ACTIVE TOOL ///////
+function addNewMeasurement(mouseEventData) {
+  var element = mouseEventData.element;
+  var measurementData = createNewMeasurement(mouseEventData);
+
+  var doneCallback = function doneCallback() {
+    measurementData.active = false;
+    _externalModules2.default.cornerstone.updateImage(element);
+  };
+
+  (0, _toolState.addToolState)(element, toolType, measurementData);
+  _externalModules2.default.cornerstone.updateImage(element);
+
+  (0, _moveNewHandle2.default)(mouseEventData, toolType, measurementData, measurementData.handles.end, function () {
+    if ((0, _anyHandlesOutsideImage2.default)(mouseEventData, measurementData.handles)) {
+      // Delete the measurement
+      (0, _toolState.removeToolState)(element, toolType, measurementData);
+    } else {
+      var center = getCenter(measurementData.handles);
+      measurementData.handles.perpendicularPoint.x = center.x;
+      measurementData.handles.perpendicularPoint.y = center.y;
+      measurementData.handles.perpendicularPoint.isFirst = false;
+      onHandleDoneMove(element, measurementData);
+    }
+  });
+}
+
 function createNewMeasurement(mouseEventData) {
   // Create the measurement data for this tool with the end handle activated
   var measurementData = {
@@ -7715,18 +7779,29 @@ function createNewMeasurement(mouseEventData) {
     active: true,
     invalidated: true,
     color: undefined,
+    shortestDistance: 0,
     handles: {
       start: {
         x: mouseEventData.currentPoints.image.x,
         y: mouseEventData.currentPoints.image.y,
         highlight: true,
-        active: false
+        active: false,
+        key: "start"
       },
       end: {
         x: mouseEventData.currentPoints.image.x,
         y: mouseEventData.currentPoints.image.y,
         highlight: true,
-        active: true
+        active: true,
+        key: "end"
+      },
+      perpendicularPoint: {
+        x: mouseEventData.currentPoints.image.x,
+        y: mouseEventData.currentPoints.image.y,
+        highlight: true,
+        active: true,
+        isFirst: true,
+        key: "perpendicular"
       },
       textBox: {
         active: false,
@@ -7750,25 +7825,28 @@ function pointNearEllipse(element, data, coords, distance) {
   }
 
   var cornerstone = _externalModules2.default.cornerstone;
+  var center = getCenter(data.handles);
   var startCanvas = cornerstone.pixelToCanvas(element, data.handles.start);
   var endCanvas = cornerstone.pixelToCanvas(element, data.handles.end);
+  var perpendicularCanvas = cornerstone.pixelToCanvas(element, data.handles.perpendicularPoint);
+  var centerCanvas = cornerstone.pixelToCanvas(element, center);
 
+  var square = function square(x) {
+    return x * x;
+  };
   var minorEllipse = {
-    left: Math.min(startCanvas.x, endCanvas.x) + distance / 2,
-    top: Math.min(startCanvas.y, endCanvas.y) + distance / 2,
-    width: Math.abs(startCanvas.x - endCanvas.x) - distance,
-    height: Math.abs(startCanvas.y - endCanvas.y) - distance
+    xRadius: Math.sqrt(square(startCanvas.x - endCanvas.x) + square(startCanvas.y - endCanvas.y)) / 2 - distance / 2,
+    yRadius: Math.sqrt(square(perpendicularCanvas.x - centerCanvas.x) + square(perpendicularCanvas.y - centerCanvas.y)) - distance / 2
   };
 
   var majorEllipse = {
-    left: Math.min(startCanvas.x, endCanvas.x) - distance / 2,
-    top: Math.min(startCanvas.y, endCanvas.y) - distance / 2,
-    width: Math.abs(startCanvas.x - endCanvas.x) + distance,
-    height: Math.abs(startCanvas.y - endCanvas.y) + distance
+    xRadius: Math.sqrt(square(startCanvas.x - endCanvas.x) + square(startCanvas.y - endCanvas.y)) / 2 + distance / 2,
+    yRadius: Math.sqrt(square(perpendicularCanvas.x - centerCanvas.x) + square(perpendicularCanvas.y - centerCanvas.y)) + distance / 2
   };
+  var theta = Math.atan2(endCanvas.y - startCanvas.y, endCanvas.x - startCanvas.x);
 
-  var pointInMinorEllipse = (0, _pointInEllipse2.default)(minorEllipse, coords);
-  var pointInMajorEllipse = (0, _pointInEllipse2.default)(majorEllipse, coords);
+  var pointInMinorEllipse = (0, _pointInRotatedEllipse2.default)(minorEllipse, centerCanvas, coords, theta);
+  var pointInMajorEllipse = (0, _pointInRotatedEllipse2.default)(majorEllipse, centerCanvas, coords, theta);
 
   if (pointInMajorEllipse && !pointInMinorEllipse) {
     return true;
@@ -7787,11 +7865,145 @@ function pointNearToolTouch(element, data, coords) {
 
 function numberWithCommas(x) {
   // http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
-  var parts = x.toString().split('.');
+  var parts = x.toString().split(".");
 
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-  return parts.join('.');
+  return parts.join(".");
+}
+
+function getCenter(handles) {
+  var start = handles.start,
+      end = handles.end;
+
+  var w = Math.abs(start.x - end.x);
+  var h = Math.abs(start.y - end.y);
+  var xMin = Math.min(start.x, end.x);
+  var yMin = Math.min(start.y, end.y);
+
+  var center = {
+    x: xMin + w / 2,
+    y: yMin + h / 2
+  };
+  return center;
+}
+
+function mouseMoveCallback(e) {
+  var eventData = e.detail;
+
+  _toolCoordinates2.default.setCoords(eventData);
+
+  // If we have no tool data for this element, do nothing
+  var toolData = (0, _toolState.getToolState)(eventData.element, toolType);
+
+  if (!toolData) {
+    return;
+  }
+
+  // We have tool data, search through all data
+  // And see if we can activate a handle
+  var imageNeedsUpdate = false;
+
+  for (var i = 0; i < toolData.data.length; i++) {
+    // Get the cursor position in canvas coordinates
+    var coords = eventData.currentPoints.canvas;
+
+    var data = toolData.data[i];
+
+    if ((0, _handleActivator2.default)(eventData.element, data.handles, coords) === true) {
+      imageNeedsUpdate = true;
+    }
+
+    if (pointNearTool(eventData.element, data, coords) && !data.active || !pointNearTool(eventData.element, data, coords) && data.active) {
+      data.active = !data.active;
+      imageNeedsUpdate = true;
+    }
+  }
+
+  // Handle activation status changed, redraw the image
+  if (imageNeedsUpdate === true) {
+    _externalModules2.default.cornerstone.updateImage(eventData.element);
+  }
+}
+
+function mouseDownCallback(e) {
+  var eventData = e.detail;
+  var data = void 0;
+  var element = eventData.element;
+  var options = (0, _toolOptions.getToolOptions)(toolType, element);
+
+  if (!(0, _isMouseButtonEnabled2.default)(eventData.which, options.mouseButtonMask)) {
+    return;
+  }
+
+  function handleDoneMove() {
+    data.invalidated = true;
+    if ((0, _anyHandlesOutsideImage2.default)(eventData, data.handles)) {
+      // Delete the measurement
+      (0, _toolState.removeToolState)(element, toolType, data);
+    } else if (onHandleDoneMove) {
+      onHandleDoneMove(element, data);
+    }
+
+    _externalModules2.default.cornerstone.updateImage(element);
+    element.addEventListener(_events2.default.MOUSE_MOVE, mouseMoveCallback);
+  }
+
+  var coords = eventData.startPoints.canvas;
+  var toolData = (0, _toolState.getToolState)(e.currentTarget, toolType);
+
+  if (!toolData) {
+    return;
+  }
+
+  var i = void 0;
+
+  // Now check to see if there is a handle we can move
+
+  var preventHandleOutsideImage = true;
+
+  for (i = 0; i < toolData.data.length; i++) {
+    data = toolData.data[i];
+    var distance = 6;
+    var handle = (0, _getHandleNearImagePoint2.default)(element, data.handles, coords, distance);
+
+    if (handle) {
+      element.removeEventListener(_events2.default.MOUSE_MOVE, mouseMoveCallback);
+      data.active = true;
+      (0, _movePerpendicularHandle2.default)(eventData, toolType, data, handle, handleDoneMove, preventHandleOutsideImage);
+      e.stopImmediatePropagation();
+      e.stopPropagation();
+      e.preventDefault();
+
+      return;
+    }
+  }
+
+  // Now check to see if there is a line we can move
+  // Now check to see if we have a tool that we can move
+  if (!pointNearTool) {
+    return;
+  }
+
+  var opt = {
+    deleteIfHandleOutsideImage: true,
+    preventHandleOutsideImage: false
+  };
+
+  for (i = 0; i < toolData.data.length; i++) {
+    data = toolData.data[i];
+    data.active = false;
+    if (pointNearTool(element, data, coords)) {
+      data.active = true;
+      element.removeEventListener(_events2.default.MOUSE_MOVE, mouseMoveCallback);
+      (0, _moveAllHandles2.default)(e, data, toolData, toolType, opt, handleDoneMove);
+      e.stopImmediatePropagation();
+      e.stopPropagation();
+      e.preventDefault();
+
+      return;
+    }
+  }
 }
 
 function onImageRendered(e) {
@@ -7809,7 +8021,7 @@ function onImageRendered(e) {
   var element = eventData.element;
   var lineWidth = _toolStyle2.default.getToolWidth();
   var config = rotatedEllipticalRoi.getConfiguration();
-  var seriesModule = cornerstone.metaData.get('generalSeriesModule', image.imageId);
+  var seriesModule = cornerstone.metaData.get("generalSeriesModule", image.imageId);
   var modality = void 0;
 
   var _getColRowPixelSpacin = (0, _getColRowPixelSpacing2.default)(eventData.image),
@@ -7828,7 +8040,7 @@ function onImageRendered(e) {
     var data = toolData.data[i];
 
     if (data.visible === false) {
-      return 'continue';
+      return "continue";
     }
 
     (0, _drawing.draw)(context, function (context) {
@@ -7837,9 +8049,12 @@ function onImageRendered(e) {
 
       // Check which color the rendered tool should be
       var color = _toolColors2.default.getColorIfActive(data);
-
+      // getIntersection(data.handles)
+      // console.log(getIntersection(data.handles))
       // Draw the ellipse on the canvas
-      (0, _drawing.drawEllipse)(context, element, data.handles.start, data.handles.end, { color: color });
+      (0, _drawing.drawRotatedEllipse)(context, element, data.handles.start, data.handles.end, data.handles.perpendicularPoint, {
+        color: color
+      });
 
       // If the tool configuration specifies to only draw the handles on hover / active,
       // Follow this logic
@@ -7881,7 +8096,7 @@ function onImageRendered(e) {
   for (var i = 0; i < toolData.data.length; i++) {
     var _ret = _loop(i);
 
-    if (_ret === 'continue') continue;
+    if (_ret === "continue") continue;
   }
 
   function textBoxText(data) {
@@ -7897,20 +8112,20 @@ function onImageRendered(e) {
     // If the mean and standard deviation values are present, display them
     if (meanStdDev && meanStdDev.mean !== undefined) {
       // If the modality is CT, add HU to denote Hounsfield Units
-      var moSuffix = '';
+      var moSuffix = "";
 
-      if (modality === 'CT') {
-        moSuffix = ' HU';
+      if (modality === "CT") {
+        moSuffix = " HU";
       }
 
       // Create a line of text to display the mean and any units that were specified (i.e. HU)
-      var meanText = 'Mean: ' + numberWithCommas(meanStdDev.mean.toFixed(2)) + moSuffix;
+      var meanText = "Mean: " + numberWithCommas(meanStdDev.mean.toFixed(2)) + moSuffix;
       // Create a line of text to display the standard deviation and any units that were specified (i.e. HU)
-      var stdDevText = 'StdDev: ' + numberWithCommas(meanStdDev.stdDev.toFixed(2)) + moSuffix;
+      var stdDevText = "StdDev: " + numberWithCommas(meanStdDev.stdDev.toFixed(2)) + moSuffix;
 
       // If this image has SUV values to display, concatenate them to the text line
       if (meanStdDevSUV && meanStdDevSUV.mean !== undefined) {
-        var SUVtext = ' SUV: ';
+        var SUVtext = " SUV: ";
 
         meanText += SUVtext + numberWithCommas(meanStdDevSUV.mean.toFixed(2));
         stdDevText += SUVtext + numberWithCommas(meanStdDevSUV.stdDev.toFixed(2));
@@ -7926,14 +8141,14 @@ function onImageRendered(e) {
       // Determine the area suffix based on the pixel spacing in the image.
       // If pixel spacing is present, use millimeters. Otherwise, use pixels.
       // This uses Char code 178 for a superscript 2
-      var suffix = ' mm' + String.fromCharCode(178);
+      var suffix = " mm" + String.fromCharCode(178);
 
       if (!rowPixelSpacing || !colPixelSpacing) {
-        suffix = ' pixels' + String.fromCharCode(178);
+        suffix = " pixels" + String.fromCharCode(178);
       }
 
       // Create a line of text to display the area and its units
-      var areaText = 'Area: ' + numberWithCommas(area.toFixed(2)) + suffix;
+      var areaText = "Area: " + numberWithCommas(area.toFixed(2)) + suffix;
 
       // Add this text line to the array to be displayed in the textbox
       textLines.push(areaText);
@@ -7954,21 +8169,14 @@ function onImageRendered(e) {
     var height = Math.abs(handles.start.y - handles.end.y);
 
     return [{
-      // Top middle point of ellipse
-      x: left + width / 2,
-      y: top
+      x: handles.start.x,
+      y: handles.start.y
     }, {
-      // Left middle point of ellipse
-      x: left,
-      y: top + height / 2
+      x: handles.end.x,
+      y: handles.end.y
     }, {
-      // Bottom middle point of ellipse
-      x: left + width / 2,
-      y: top + height
-    }, {
-      // Right middle point of ellipse
-      x: left + width,
-      y: top + height / 2
+      x: handles.perpendicularPoint.x,
+      y: handles.perpendicularPoint.y
     }];
   }
 }
@@ -7998,18 +8206,17 @@ function calculateStatistics(data, element, image, modality, rowPixelSpacing, co
       top: Math.round(Math.min(data.handles.start.y, data.handles.end.y)),
       width: Math.round(Math.abs(data.handles.start.x - data.handles.end.x)),
       height: Math.round(Math.abs(data.handles.start.y - data.handles.end.y))
-    };
 
-    // First, make sure this is not a color image, since no mean / standard
-    // Deviation will be calculated for color images.
-    if (!image.color) {
+      // First, make sure this is not a color image, since no mean / standard
+      // Deviation will be calculated for color images.
+    };if (!image.color) {
       // Retrieve the array of pixels that the ellipse bounds cover
       var pixels = cornerstone.getPixels(element, ellipse.left, ellipse.top, ellipse.width, ellipse.height);
 
       // Calculate the mean & standard deviation from the pixels and the ellipse details
       meanStdDev = (0, _calculateEllipseStatistics2.default)(pixels, ellipse);
 
-      if (modality === 'PT') {
+      if (modality === "PT") {
         // If the image is from a PET scan, use the DICOM tags to
         // Calculate the SUV from the mean and standard deviation.
 
@@ -8037,9 +8244,9 @@ function calculateStatistics(data, element, image, modality, rowPixelSpacing, co
     if (!isNaN(area)) {
       data.area = area;
 
-      data.unit = 'mm' + String.fromCharCode(178);
+      data.unit = "mm" + String.fromCharCode(178);
       if (!rowPixelSpacing || !colPixelSpacing) {
-        data.unit = 'pixels' + String.fromCharCode(178);
+        data.unit = "pixels" + String.fromCharCode(178);
       }
     }
 
@@ -8050,7 +8257,7 @@ function calculateStatistics(data, element, image, modality, rowPixelSpacing, co
 
 function onHandleDoneMove(element, data) {
   var image = _externalModules2.default.cornerstone.getImage(element);
-  var seriesModule = _externalModules2.default.cornerstone.metaData.get('generalSeriesModule', image.imageId);
+  var seriesModule = _externalModules2.default.cornerstone.metaData.get("generalSeriesModule", image.imageId);
   var modality = void 0;
 
   var _getColRowPixelSpacin2 = (0, _getColRowPixelSpacing2.default)(image),
@@ -8072,7 +8279,9 @@ var rotatedEllipticalRoi = (0, _mouseButtonTool2.default)({
   onImageRendered: onImageRendered,
   pointNearTool: pointNearTool,
   toolType: toolType,
-  onHandleDoneMove: onHandleDoneMove
+  onHandleDoneMove: onHandleDoneMove,
+  addNewMeasurement: addNewMeasurement,
+  mouseDownCallback: mouseDownCallback
 });
 
 var rotatedEllipticalRoiTouch = (0, _touchTool2.default)({
@@ -14416,6 +14625,161 @@ var _triggerEvent2 = _interopRequireDefault(_triggerEvent);
 var _clip = __webpack_require__(/*! ../util/clip.js */ "./util/clip.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/***/ }),
+
+/***/ "./manipulators/movePerpendicularHandle.js":
+/*!*************************************************!*\
+  !*** ./manipulators/movePerpendicularHandle.js ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+exports.default = function (mouseEventData, toolType, data, handle, doneMovingCallback, preventHandleOutsideImage) {
+  var cornerstone = _externalModules2.default.cornerstone;
+  var element = mouseEventData.element;
+  var distanceFromTool = {
+    x: handle.x - mouseEventData.currentPoints.image.x,
+    y: handle.y - mouseEventData.currentPoints.image.y
+  };
+  var columns = mouseEventData.image.columns;
+
+
+  function mouseDragCallback(e) {
+    var eventData = e.detail;
+
+    if (handle.hasMoved === false) {
+      handle.hasMoved = true;
+    }
+
+    handle.active = true;
+    var _data$handles = data.handles,
+        start = _data$handles.start,
+        end = _data$handles.end;
+
+    var center = getCenter(data.handles);
+    var inclination = (end.y - start.y) / (end.x - start.x);
+    var rInclination = -(1 / inclination);
+    var b = center.y - rInclination * center.x;
+    var bb = eventData.currentPoints.image.y + distanceFromTool.y - inclination * (eventData.currentPoints.image.x + distanceFromTool.x);
+    var f = function f(a, x, b) {
+      return a * x + b;
+    };
+
+    if (handle.key === 'perpendicular') {
+      var longLine = {
+        start: {
+          x: 0,
+          y: f(rInclination, 0, b)
+        },
+        end: {
+          x: columns,
+          y: f(rInclination, columns, b)
+        }
+      };
+      var shortLine = {
+        start: {
+          x: 0,
+          y: f(inclination, 0, bb)
+        },
+        end: {
+          x: columns,
+          y: f(inclination, columns, bb)
+        }
+      };
+      var intersection = _externalModules2.default.cornerstoneMath.lineSegment.intersectLine(longLine, shortLine);
+      var square = function square(x) {
+        return x * x;
+      };
+      var shortestDistance = Math.sqrt(square(intersection.x - center.x) + square(intersection.y - center.y));
+
+      data.shortestDistance = shortestDistance;
+
+      handle.x = intersection.x;
+      handle.y = intersection.y;
+    } else {
+      handle.x = eventData.currentPoints.image.x + distanceFromTool.x;
+      handle.y = eventData.currentPoints.image.y + distanceFromTool.y;
+      center = getCenter(data.handles);
+      var theta = Math.atan(rInclination);
+
+      data.handles.perpendicularPoint.x = center.x - data.shortestDistance * Math.cos(theta);
+      data.handles.perpendicularPoint.y = center.y - data.shortestDistance * Math.sin(theta);
+    }
+
+    if (preventHandleOutsideImage) {
+      (0, _clip.clipToBox)(handle, eventData.image);
+    }
+
+    cornerstone.updateImage(element);
+
+    var eventType = _events2.default.MEASUREMENT_MODIFIED;
+    var modifiedEventData = {
+      toolType: toolType,
+      element: element,
+      measurementData: data
+    };
+
+    (0, _triggerEvent2.default)(element, eventType, modifiedEventData);
+  }
+
+  element.addEventListener(_events2.default.MOUSE_DRAG, mouseDragCallback);
+
+  function mouseUpCallback() {
+    handle.active = false;
+    element.removeEventListener(_events2.default.MOUSE_DRAG, mouseDragCallback);
+    element.removeEventListener(_events2.default.MOUSE_UP, mouseUpCallback);
+    element.removeEventListener(_events2.default.MOUSE_CLICK, mouseUpCallback);
+    cornerstone.updateImage(element);
+
+    if (typeof doneMovingCallback === 'function') {
+      doneMovingCallback();
+    }
+  }
+
+  element.addEventListener(_events2.default.MOUSE_UP, mouseUpCallback);
+  element.addEventListener(_events2.default.MOUSE_CLICK, mouseUpCallback);
+};
+
+var _events = __webpack_require__(/*! ../events.js */ "./events.js");
+
+var _events2 = _interopRequireDefault(_events);
+
+var _externalModules = __webpack_require__(/*! ../externalModules.js */ "./externalModules.js");
+
+var _externalModules2 = _interopRequireDefault(_externalModules);
+
+var _triggerEvent = __webpack_require__(/*! ../util/triggerEvent.js */ "./util/triggerEvent.js");
+
+var _triggerEvent2 = _interopRequireDefault(_triggerEvent);
+
+var _clip = __webpack_require__(/*! ../util/clip.js */ "./util/clip.js");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function getCenter(handles) {
+  var start = handles.start,
+      end = handles.end;
+
+  var w = Math.abs(start.x - end.x);
+  var h = Math.abs(start.y - end.y);
+  var xMin = Math.min(start.x, end.x);
+  var yMin = Math.min(start.y, end.y);
+
+  var center = {
+    x: xMin + w / 2,
+    y: yMin + h / 2
+  };
+
+  return center;
+}
 
 /***/ }),
 
@@ -20979,6 +21343,7 @@ exports.drawLine = drawLine;
 exports.drawLines = drawLines;
 exports.drawJoinedLines = drawJoinedLines;
 exports.drawCircle = drawCircle;
+exports.drawRotatedEllipse = drawRotatedEllipse;
 exports.drawEllipse = drawEllipse;
 exports.drawRect = drawRect;
 exports.fillOutsideRect = fillOutsideRect;
@@ -20998,6 +21363,8 @@ var _toolStyle2 = _interopRequireDefault(_toolStyle);
 var _textStyle = __webpack_require__(/*! ../stateManagement/textStyle.js */ "./stateManagement/textStyle.js");
 
 var _textStyle2 = _interopRequireDefault(_textStyle);
+
+var _pointProjector = __webpack_require__(/*! ./pointProjector.js */ "./util/pointProjector.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -21222,6 +21589,83 @@ function drawCircle(context, element, center, radius, options) {
 
   path(context, options, function (context) {
     context.arc(center.x, center.y, radius, 0, 2 * Math.PI);
+  });
+}
+
+/**
+ * Draw an ellipse within the bounding box defined by `corner1` and `corner2`.
+ * @public
+ * @method drawRotatedEllipse
+ * @memberof Drawing
+ *
+ * @param {CanvasRenderingContext2D} context - Target context
+ * @param {HTMLElement} element - The DOM Element to draw on
+ * @param {Object} corner1 - `{ x, y }` in either pixel or canvas coordinates.
+ * @param {Object} corner2 - `{ x, y }` in either pixel or canvas coordinates.
+ * @param {Object} corner3 - `{ x, y }` in either pixel or canvas coordinates.
+ * @param {Object} options - See {@link path}
+ * @param {String} [coordSystem='pixel'] - Can be "pixel" (default) or "canvas". The coordinate
+ *     system of the points passed in to the function. If "pixel" then cornerstone.pixelToCanvas
+ *     is used to transform the points from pixel to canvas coordinates.
+ * @param {Number} initialRotation - Ellipse initial rotation
+ * @returns {undefined}
+ */
+function drawRotatedEllipse(context, element, corner1, corner2, corner3, options) {
+  var coordSystem = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : 'pixel';
+  var initialRotation = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : 0.0;
+  var _corner = corner3,
+      isFirst = _corner.isFirst;
+
+
+  if (coordSystem === 'pixel') {
+    corner1 = _externalModules2.default.cornerstone.pixelToCanvas(element, corner1);
+    corner2 = _externalModules2.default.cornerstone.pixelToCanvas(element, corner2);
+    corner3 = _externalModules2.default.cornerstone.pixelToCanvas(element, corner3);
+  }
+
+  var viewport = _externalModules2.default.cornerstone.getViewport(element);
+
+  // Calculate the center of the image
+  var width = element.clientWidth,
+      height = element.clientHeight;
+  var scale = viewport.scale,
+      translation = viewport.translation;
+
+  var rotation = viewport.rotation - initialRotation;
+
+  var centerPoint = {
+    x: width / 2 + translation.x * scale,
+    y: height / 2 + translation.y * scale
+  };
+
+  if (Math.abs(rotation) > 0.05) {
+    corner1 = (0, _pointProjector.rotatePoint)(corner1, centerPoint, -rotation);
+    corner2 = (0, _pointProjector.rotatePoint)(corner2, centerPoint, -rotation);
+    corner3 = _externalModules2.default.cornerstone.pixelToCanvas(element, corner3);
+  }
+  var w = Math.abs(corner1.x - corner2.x);
+  var h = Math.abs(corner1.y - corner2.y);
+  var xMin = Math.min(corner1.x, corner2.x);
+  var yMin = Math.min(corner1.y, corner2.y);
+
+  var center = {
+    x: xMin + w / 2,
+    y: yMin + h / 2
+  };
+
+  if (Math.abs(rotation) > 0.05) {
+    center = (0, _pointProjector.rotatePoint)(center, centerPoint, rotation);
+  }
+  var square = function square(x) {
+    return x * x;
+  };
+  var longestDistance = Math.sqrt(square(w) + square(h));
+  var shortestDistance = isFirst ? 0 : Math.sqrt(square(corner3.x - center.x) + square(corner3.y - center.y));
+
+  var angle = rotation * Math.PI / 180 + Math.atan2(corner2.y - corner1.y, corner2.x - corner1.x);
+
+  path(context, options, function (context) {
+    context.ellipse(center.x, center.y, longestDistance / 2, shortestDistance, angle, 0, Math.PI * 2);
   });
 }
 
@@ -23687,6 +24131,54 @@ exports.default = function (ellipse, location) {
   var inEllipse = normalized.x * normalized.x / (xRadius * xRadius) + normalized.y * normalized.y / (yRadius * yRadius) <= 1.0;
 
   return inEllipse;
+};
+
+/***/ }),
+
+/***/ "./util/pointInRotatedEllipse.js":
+/*!***************************************!*\
+  !*** ./util/pointInRotatedEllipse.js ***!
+  \***************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+exports.default = function (ellipse, center, location) {
+  var theta = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+  var xRadius = ellipse.xRadius,
+      yRadius = ellipse.yRadius;
+
+
+  if (xRadius <= 0.0 || yRadius <= 0.0) {
+    return false;
+  }
+
+  var normalized = {
+    x: location.x - center.x,
+    y: location.y - center.y
+  };
+  var square = function square(x) {
+    return x * x;
+  };
+
+  /*
+   * ((𝑋−𝐶𝑥)cos(𝜃)+(𝑌−𝐶𝑦)sin(𝜃))^2 / (Rx)^2
+   * + ((𝑋−𝐶𝑥)sin(𝜃)−(𝑌−𝐶𝑦)cos(𝜃))^2 / (𝑅𝑦)^2 * <= 1
+   */
+  var ll = normalized.x * Math.cos(theta);
+  var lr = normalized.y * Math.sin(theta);
+  var rl = normalized.x * Math.sin(theta);
+  var rr = normalized.y * Math.cos(theta);
+
+  var r = square(ll + lr) / square(xRadius) + square(rl - rr) / square(yRadius) <= 1.0;
+
+  return r;
 };
 
 /***/ }),
