@@ -10,7 +10,11 @@ import triggerEvent from '../util/triggerEvent.js';
 import triggerMeasurementCompletedEvent from '../util/triggerMeasurementCompletedEvent.js';
 import isMouseButtonEnabled from '../util/isMouseButtonEnabled.js';
 import drawLinkedTextBox from '../util/drawLinkedTextBox.js';
-import { addToolState, getToolState, removeToolState } from '../stateManagement/toolState.js';
+import {
+  addToolState,
+  getToolState,
+  removeToolState
+} from '../stateManagement/toolState.js';
 import { setToolOptions, getToolOptions } from '../toolOptions.js';
 import { clipToBox } from '../util/clip.js';
 import getColRowPixelSpacing from '../util/getColRowPixelSpacing.js';
@@ -54,10 +58,10 @@ let configuration = {
 };
 
 /**
-* Initialises a new freehand data object
-*
-* @return {Object} measurementData - data object
-*/
+ * Initialises a new freehand data object
+ *
+ * @return {Object} measurementData - data object
+ */
 function createNewMeasurement () {
   // Create the measurement data for this tool
   const measurementData = {
@@ -80,13 +84,13 @@ function createNewMeasurement () {
 }
 
 /**
-* Returns true if the mouse cursor is near a handle
-*
-* @param {HTMLElement} element - the element where the image is drawn
-* @param {Object} data - The tool data object.
-* @param {{x:Number, y:Number}} coords - coordintates of the point
-* @return {Boolean} True if provided coordinates are near the tool handle; Otherwise, false. 
-*/
+ * Returns true if the mouse cursor is near a handle
+ *
+ * @param {HTMLElement} element - the element where the image is drawn
+ * @param {Object} data - The tool data object.
+ * @param {{x:Number, y:Number}} coords - coordintates of the point
+ * @return {Boolean} True if provided coordinates are near the tool handle; Otherwise, false.
+ */
 function pointNearTool (element, data, coords) {
   const isPointNearTool = pointNearHandle(element, data, coords);
 
@@ -99,12 +103,12 @@ function pointNearTool (element, data, coords) {
 }
 
 /**
-* Returns a handle of a particular tool if it is close to the mouse cursor
-*
-* @param {Object} eventData - data object associated with an event.
-* @param {Number} toolIndex - the ID of the tool
-* @return {Number|Object|Boolean}
-*/
+ * Returns a handle of a particular tool if it is close to the mouse cursor
+ *
+ * @param {Object} eventData - data object associated with an event.
+ * @param {Number} toolIndex - the ID of the tool
+ * @return {Number|Object|Boolean}
+ */
 function pointNearHandle (element, data, coords) {
   const config = freehand.getConfiguration();
 
@@ -117,9 +121,15 @@ function pointNearHandle (element, data, coords) {
   }
 
   for (let i = 0; i < data.handles.length; i++) {
-    const handleCanvas = external.cornerstone.pixelToCanvas(element, data.handles[i]);
+    const handleCanvas = external.cornerstone.pixelToCanvas(
+      element,
+      data.handles[i]
+    );
 
-    if (external.cornerstoneMath.point.distance(handleCanvas, coords) < config.spacing) {
+    if (
+      external.cornerstoneMath.point.distance(handleCanvas, coords) <
+      config.spacing
+    ) {
       return i;
     }
   }
@@ -135,11 +145,11 @@ function pointNearHandle (element, data, coords) {
 }
 
 /**
-* Returns a handle if it is close to the mouse cursor (all tools)
-*
-* @param {Object} eventData - data object associated with an event.
-* @return {Object}
-*/
+ * Returns a handle if it is close to the mouse cursor (all tools)
+ *
+ * @param {Object} eventData - data object associated with an event.
+ * @return {Object}
+ */
 function pointNearHandleAllTools (eventData) {
   const element = eventData.element;
   const coords = eventData.currentPoints.canvas;
@@ -165,12 +175,12 @@ function pointNearHandleAllTools (eventData) {
 // /////// BEGIN ACTIVE TOOL ///////
 
 /**
-* Event handler for MOUSE_DOWN_ACTIVATE event, if tool is active and
-* the event is not caught by mouseDownCallback
-*
-* @event
-* @param {Object} e - The event.
-*/
+ * Event handler for MOUSE_DOWN_ACTIVATE event, if tool is active and
+ * the event is not caught by mouseDownCallback
+ *
+ * @event
+ * @param {Object} e - The event.
+ */
 function mouseDownActivateCallback (e) {
   const eventData = e.detail;
   const element = eventData.element;
@@ -199,13 +209,12 @@ function mouseDownActivateCallback (e) {
 // On next click, add another point -- continuously
 // On each click, if it intersects with a current point, end drawing loop
 
-
 /**
-* Begining of drawing loop when tool is active and a click event happens far
-* from existing handles.
-*
-* @param {Object} eventData - data object associated with an event.
-*/
+ * Begining of drawing loop when tool is active and a click event happens far
+ * from existing handles.
+ *
+ * @param {Object} eventData - data object associated with an event.
+ */
 function startDrawing (eventData) {
   const element = eventData.element;
 
@@ -226,19 +235,22 @@ function startDrawing (eventData) {
 }
 
 /**
-* If in pencilMode, check the mouse position is farther than the minimum
-* distance between points, then add a point.
-*
-* @param {Object} eventData - Data object associated with an event.
-* @param {Object} dataHandles - Data object associated with the tool.
-*/
+ * If in pencilMode, check the mouse position is farther than the minimum
+ * distance between points, then add a point.
+ *
+ * @param {Object} eventData - Data object associated with an event.
+ * @param {Object} dataHandles - Data object associated with the tool.
+ */
 function addPointPencilMode (eventData, dataHandles) {
   const config = freehand.getConfiguration();
 
   const mousePoint = config.mouseLocation.handles.start;
 
   for (let i = 0; i < dataHandles.length; i++) {
-    if (external.cornerstoneMath.point.distance(dataHandles[i], mousePoint) < config.spacing) {
+    if (
+      external.cornerstoneMath.point.distance(dataHandles[i], mousePoint) <
+      config.spacing
+    ) {
       return;
     }
   }
@@ -247,10 +259,10 @@ function addPointPencilMode (eventData, dataHandles) {
 }
 
 /**
-* Adds a point on mouse click in polygon mode.
-*
-* @param {Object} eventData - data object associated with an event.
-*/
+ * Adds a point on mouse click in polygon mode.
+ *
+ * @param {Object} eventData - data object associated with an event.
+ */
 function addPoint (eventData) {
   const toolData = getToolState(eventData.element, toolType);
 
@@ -271,7 +283,9 @@ function addPoint (eventData) {
   // If this is not the first handle
   if (data.handles.length) {
     // Add the line from the current handle to the new handle
-    data.handles[config.currentHandle - 1].lines.push(eventData.currentPoints.image);
+    data.handles[config.currentHandle - 1].lines.push(
+      eventData.currentPoints.image
+    );
   }
 
   // Add the new handle
@@ -287,11 +301,11 @@ function addPoint (eventData) {
 }
 
 /**
-* Ends the active drawing loop and completes the polygon.
-*
-* @param {Object} eventData - data object associated with an event.
-* @param {Object} handleNearby - the handle nearest to the mouse cursor.
-*/
+ * Ends the active drawing loop and completes the polygon.
+ *
+ * @param {Object} eventData - data object associated with an event.
+ * @param {Object} handleNearby - the handle nearest to the mouse cursor.
+ */
 function endDrawing (eventData, handleNearby) {
   const toolData = getToolState(eventData.element, toolType);
 
@@ -334,16 +348,28 @@ function endDrawing (eventData, handleNearby) {
   if (deleteData) {
     removeToolState(eventData.element, toolType, data);
   } else {
-    const seriesModule = external.cornerstone.metaData.get('generalSeriesModule', eventData.image.imageId);
+    const seriesModule = external.cornerstone.metaData.get(
+      'generalSeriesModule',
+      eventData.image.imageId
+    );
     let modality;
 
     if (seriesModule) {
       modality = seriesModule.modality;
     }
 
-    const { rowPixelSpacing, colPixelSpacing } = getColRowPixelSpacing(eventData.image);
+    const { rowPixelSpacing, colPixelSpacing } = getColRowPixelSpacing(
+      eventData.image
+    );
 
-    calculateStatistics(data, eventData.element, eventData.image, modality, rowPixelSpacing, colPixelSpacing);
+    calculateStatistics(
+      data,
+      eventData.element,
+      eventData.image,
+      modality,
+      rowPixelSpacing,
+      colPixelSpacing
+    );
 
     triggerMeasurementCompletedEvent(eventData.element, data, toolType);
   }
@@ -352,12 +378,12 @@ function endDrawing (eventData, handleNearby) {
 }
 
 /**
-* Event handler called by mouseDownCallback when the tool is currently active.
-*
-* @param {Object} e - The event.
-* @param {Object} toolData - The data object associated with the freehand tool.
-* @param {Number} currentTool - The ID of the active freehand polygon.
-*/
+ * Event handler called by mouseDownCallback when the tool is currently active.
+ *
+ * @param {Object} e - The event.
+ * @param {Object} toolData - The data object associated with the freehand tool.
+ * @param {Number} currentTool - The ID of the active freehand polygon.
+ */
 function mouseDownActive (e, toolData, currentTool) {
   const eventData = e.detail;
   const config = freehand.getConfiguration();
@@ -383,11 +409,11 @@ function mouseDownActive (e, toolData, currentTool) {
 // /////// END ACTIVE TOOL ///////
 
 /**
-* Event handler for MOUSE_DOWN event.
-*
-* @event
-* @param {Object} e - The event.
-*/
+ * Event handler for MOUSE_DOWN event.
+ *
+ * @event
+ * @param {Object} e - The event.
+ */
 function mouseDownCallback (e) {
   const eventData = e.detail;
   const element = eventData.element;
@@ -409,15 +435,14 @@ function mouseDownCallback (e) {
       mouseDownActive(e, toolData, currentTool);
     }
   }
-
 }
 
 /**
-* Event handler for MOUSE_MOVE event.
-*
-* @event
-* @param {Object} e - The event.
-*/
+ * Event handler for MOUSE_MOVE event.
+ *
+ * @event
+ * @param {Object} e - The event.
+ */
 function mouseMoveCallback (e) {
   const eventData = e.detail;
   const toolData = getToolState(eventData.element, toolType);
@@ -436,7 +461,6 @@ function mouseMoveCallback (e) {
     if (!imageNeedsUpdate) {
       return;
     }
-
   } else {
     mouseMoveActive(eventData, toolData);
   }
@@ -446,11 +470,11 @@ function mouseMoveCallback (e) {
 }
 
 /**
-* Event handler called by mouseMoveCallback when the tool is currently active.
-*
-* @param {Object} eventData - data object associated with an event.
-* @param {Object} toolData - data object associated with the freehand tool.
-*/
+ * Event handler called by mouseMoveCallback when the tool is currently active.
+ *
+ * @param {Object} eventData - data object associated with an event.
+ * @param {Object} toolData - data object associated with the freehand tool.
+ */
 function mouseMoveActive (eventData, toolData) {
   const config = freehand.getConfiguration();
   const currentTool = config.currentTool;
@@ -470,7 +494,11 @@ function mouseMoveActive (eventData, toolData) {
 
     // If there is a handle nearby to snap to
     // (and it's not the actual mouse handle)
-    if (handleNearby !== null && !handleNearby.hasBoundingBox && handleNearby < (data.handles.length - 1)) {
+    if (
+      handleNearby !== null &&
+      !handleNearby.hasBoundingBox &&
+      handleNearby < data.handles.length - 1
+    ) {
       config.mouseLocation.handles.start.x = data.handles[handleNearby].x;
       config.mouseLocation.handles.start.y = data.handles[handleNearby].y;
     }
@@ -478,11 +506,11 @@ function mouseMoveActive (eventData, toolData) {
 }
 
 /**
-* Returns true if the proposed location of a new handle is invalid.
-*
-* @param {Object} data - data object associated with the tool.
-* @return {Boolean}
-*/
+ * Returns true if the proposed location of a new handle is invalid.
+ *
+ * @param {Object} data - data object associated with the tool.
+ * @return {Boolean}
+ */
 function checkInvalidHandleLocation (data) {
   const config = freehand.getConfiguration();
 
@@ -492,9 +520,11 @@ function checkInvalidHandleLocation (data) {
 
   let invalidHandlePlacement;
 
-  if (config.activePencilMode) { // Pencil mode
+  if (config.activePencilMode) {
+    // Pencil mode
     invalidHandlePlacement = checkHandlesPencilMode(data);
-  } else { // Polygon mode
+  } else {
+    // Polygon mode
     invalidHandlePlacement = checkHandlesPolygonMode(data);
   }
 
@@ -502,16 +532,19 @@ function checkInvalidHandleLocation (data) {
 }
 
 /**
-* Returns true if the proposed location of a new handle is invalid (in pencilMode).
-*
-* @param {Object} data - data object associated with the tool.
-* @return {Boolean}
-*/
+ * Returns true if the proposed location of a new handle is invalid (in pencilMode).
+ *
+ * @param {Object} data - data object associated with the tool.
+ * @return {Boolean}
+ */
 function checkHandlesPencilMode (data) {
   const config = freehand.getConfiguration();
   const mousePoint = config.mouseLocation.handles.start;
   const dataHandles = data.handles;
-  let invalidHandlePlacement = freeHandIntersect.newHandle(mousePoint, dataHandles);
+  let invalidHandlePlacement = freeHandIntersect.newHandle(
+    mousePoint,
+    dataHandles
+  );
 
   if (invalidHandlePlacement === false) {
     invalidHandlePlacement = invalidHandlePencilMode(data, mousePoint);
@@ -521,11 +554,11 @@ function checkHandlesPencilMode (data) {
 }
 
 /**
-* Returns true if the proposed location of a new handle is invalid (in polygon mode).
-*
-* @param {Object} data - data object associated with the tool.
-* @return {Boolean}
-*/
+ * Returns true if the proposed location of a new handle is invalid (in polygon mode).
+ *
+ * @param {Object} data - data object associated with the tool.
+ * @return {Boolean}
+ */
 function checkHandlesPolygonMode (data) {
   const config = freehand.getConfiguration();
   const mousePoint = config.mouseLocation.handles.start;
@@ -534,30 +567,38 @@ function checkHandlesPolygonMode (data) {
 
   data.canComplete = false;
 
-  const mouseAtOriginHandle = (external.cornerstoneMath.point.distance(dataHandles[0], mousePoint) < config.spacing);
+  const mouseAtOriginHandle =
+    external.cornerstoneMath.point.distance(dataHandles[0], mousePoint) <
+    config.spacing;
 
   if (mouseAtOriginHandle && !freeHandIntersect.end(dataHandles)) {
     data.canComplete = true;
     invalidHandlePlacement = false;
   } else {
-    invalidHandlePlacement = freeHandIntersect.newHandle(mousePoint, dataHandles);
+    invalidHandlePlacement = freeHandIntersect.newHandle(
+      mousePoint,
+      dataHandles
+    );
   }
 
   return invalidHandlePlacement;
 }
 
 /**
-* Returns true if the mouse position is far enough from previous points (in pencilMode).
-*
-* @param {Object} data - data object associated with the tool.
-* @param {Object} mousePoint - the position of the mouse cursor.
-* @return {Boolean}
-*/
+ * Returns true if the mouse position is far enough from previous points (in pencilMode).
+ *
+ * @param {Object} data - data object associated with the tool.
+ * @param {Object} mousePoint - the position of the mouse cursor.
+ * @return {Boolean}
+ */
 function invalidHandlePencilMode (data, mousePoint) {
   const config = freehand.getConfiguration();
   const dataHandles = data.handles;
 
-  if (external.cornerstoneMath.point.distance(dataHandles[0], mousePoint) < config.spacing) {
+  if (
+    external.cornerstoneMath.point.distance(dataHandles[0], mousePoint) <
+    config.spacing
+  ) {
     data.canComplete = true;
 
     return false;
@@ -567,7 +608,10 @@ function invalidHandlePencilMode (data, mousePoint) {
 
   // Compare with all other handles appart from the last one
   for (let i = 1; i < dataHandles.length - 1; i++) {
-    if (external.cornerstoneMath.point.distance(dataHandles[i], mousePoint) < config.spacing) {
+    if (
+      external.cornerstoneMath.point.distance(dataHandles[i], mousePoint) <
+      config.spacing
+    ) {
       return true;
     }
   }
@@ -576,11 +620,11 @@ function invalidHandlePencilMode (data, mousePoint) {
 }
 
 /**
-* Event handler for MOUSE_DRAG event.
-*
-* @event
-* @param {Object} e - The event.
-*/
+ * Event handler for MOUSE_DRAG event.
+ *
+ * @event
+ * @param {Object} e - The event.
+ */
 function mouseDragCallback (e) {
   const eventData = e.detail;
   const toolData = getToolState(eventData.element, toolType);
@@ -606,10 +650,10 @@ function mouseDragCallback (e) {
 }
 
 /**
-* Event handler for MOUSE_UP event.
-*
-* @param {Object} e - The event.
-*/
+ * Event handler for MOUSE_UP event.
+ *
+ * @param {Object} e - The event.
+ */
 function mouseUpCallback (e) {
   const eventData = e.detail;
   const element = eventData.element;
@@ -634,15 +678,14 @@ function mouseUpCallback (e) {
   e.preventDefault();
   e.stopPropagation();
 
-
   external.cornerstone.updateImage(eventData.element);
 }
 
 /**
-* Event handler called by mouseDownCallback when the tool is currently deactive.
-*
-* @param {Object} e - The event.
-*/
+ * Event handler called by mouseDownCallback when the tool is currently deactive.
+ *
+ * @param {Object} e - The event.
+ */
 function mouseDownPassive (e) {
   const eventData = e.detail;
   const nearby = pointNearHandleAllTools(eventData);
@@ -655,11 +698,11 @@ function mouseDownPassive (e) {
 }
 
 /**
-* Event handler called by mouseDownPassive which modifies a tool's data.
-*
-* @param {Object} e - The event.
-* @param {Object} nearby - Object containing information about a nearby handle.
-*/
+ * Event handler called by mouseDownPassive which modifies a tool's data.
+ *
+ * @param {Object} e - The event.
+ * @param {Object} nearby - Object containing information about a nearby handle.
+ */
 function modifyObject (e, nearby) {
   const eventData = e.detail;
   const element = eventData.element;
@@ -678,11 +721,11 @@ function modifyObject (e, nearby) {
 }
 
 /**
-* Event handler called by mouseDownPassive which modifies a tool's textBox.
-*
-* @param {Object} element - The element associated with the event.
-* @param {Object} nearby - Object containing information about a nearby handle.
-*/
+ * Event handler called by mouseDownPassive which modifies a tool's textBox.
+ *
+ * @param {Object} element - The element associated with the event.
+ * @param {Object} nearby - Object containing information about a nearby handle.
+ */
 function modifyTextBox (element, nearby) {
   const config = freehand.getConfiguration();
   const handleNearby = nearby.handleNearby;
@@ -696,12 +739,12 @@ function modifyTextBox (element, nearby) {
 }
 
 /**
-* Event handler called by mouseDownPassive which modifies a tool's handle.
-*
-* @param {Object} element - The element associated with the event.
-* @param {Object} nearby - Object containing information about a nearby handle.
-* @param {Object} toolData - The data associated with the tool.
-*/
+ * Event handler called by mouseDownPassive which modifies a tool's handle.
+ *
+ * @param {Object} element - The element associated with the event.
+ * @param {Object} nearby - Object containing information about a nearby handle.
+ * @param {Object} toolData - The data associated with the tool.
+ */
 function modifyHandle (element, nearby, toolData) {
   const config = freehand.getConfiguration();
   const handleNearby = nearby.handleNearby;
@@ -725,12 +768,12 @@ function modifyHandle (element, nearby, toolData) {
 }
 
 /**
-* Activates a particular tool when the mouseCursor is near one if it's handles
-* or it's textBox.
-*
-* @param {Object} eventData - The data assoicated with the event.
-* @param {Object} toolData - The data associated with the tool.
-*/
+ * Activates a particular tool when the mouseCursor is near one if it's handles
+ * or it's textBox.
+ *
+ * @param {Object} eventData - The data assoicated with the event.
+ * @param {Object} toolData - The data associated with the tool.
+ */
 function mouseHover (eventData, toolData) {
   // Check if user is mousing over a point
   let imageNeedsUpdate = false;
@@ -745,7 +788,10 @@ function mouseHover (eventData, toolData) {
       imageNeedsUpdate = true;
     }
 
-    if ((pointNearTool(element, data, coords) && !data.active) || (!pointNearTool(element, data, coords) && data.active)) {
+    if (
+      (pointNearTool(element, data, coords) && !data.active) ||
+      (!pointNearTool(element, data, coords) && data.active)
+    ) {
       data.active = !data.active;
       imageNeedsUpdate = true;
     }
@@ -763,10 +809,10 @@ function mouseHover (eventData, toolData) {
 }
 
 /**
-* Gets the current mouse location and stores it in the configuration object.
-*
-* @param {Object} eventData - The data assoicated with the event.
-*/
+ * Gets the current mouse location and stores it in the configuration object.
+ *
+ * @param {Object} eventData - The data assoicated with the event.
+ */
 function getMouseLocation (eventData) {
   // Set the mouseLocation handle
   const config = freehand.getConfiguration();
@@ -777,11 +823,11 @@ function getMouseLocation (eventData) {
 }
 
 /**
-* Adds commas as thousand seperators to a Number to increase readability.
-*
-* @param {Number|String} number - A Number or String literal representing a number.
-* @return {String} - A string literal representaton of the number with commas seperating the thousands.
-*/
+ * Adds commas as thousand seperators to a Number to increase readability.
+ *
+ * @param {Number|String} number - A Number or String literal representing a number.
+ * @return {String} - A string literal representaton of the number with commas seperating the thousands.
+ */
 function numberWithCommas (number) {
   // http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
   const parts = number.toString().split('.');
@@ -793,11 +839,11 @@ function numberWithCommas (number) {
 
 // /////// BEGIN IMAGE RENDERING ///////
 /**
-* Event handler for IMAGE_RENDERED event.
-*
-* @event
-* @param {Object} e - The event.
-*/
+ * Event handler for IMAGE_RENDERED event.
+ *
+ * @event
+ * @param {Object} e - The event.
+ */
 function onImageRendered (e) {
   const eventData = e.detail;
 
@@ -812,7 +858,10 @@ function onImageRendered (e) {
   const image = eventData.image;
   const element = eventData.element;
   const config = freehand.getConfiguration();
-  const seriesModule = cornerstone.metaData.get('generalSeriesModule', image.imageId);
+  const seriesModule = cornerstone.metaData.get(
+    'generalSeriesModule',
+    image.imageId
+  );
   let modality;
   const { rowPixelSpacing, colPixelSpacing } = getColRowPixelSpacing(image);
 
@@ -844,7 +893,6 @@ function onImageRendered (e) {
           color = toolColors.getColorIfActive(data);
           fillColor = toolColors.getFillColor();
         }
-
       } else {
         fillColor = toolColors.getToolColor();
       }
@@ -853,12 +901,14 @@ function onImageRendered (e) {
         for (let j = 0; j < data.handles.length; j++) {
           const points = [...data.handles[j].lines];
 
-          if (j === (data.handles.length - 1) && !data.polyBoundingBox) {
+          if (j === data.handles.length - 1 && !data.polyBoundingBox) {
             // If it's still being actively drawn, keep the last line to
             // The mouse location
             points.push(config.mouseLocation.handles.start);
           }
-          drawJoinedLines(context, eventData.element, data.handles[j], points, { color });
+          drawJoinedLines(context, eventData.element, data.handles[j], points, {
+            color
+          });
         }
       }
 
@@ -868,7 +918,11 @@ function onImageRendered (e) {
         fill: fillColor
       };
 
-      if (config.alwaysShowHandles || config.keyDown.ctrl || data.active && data.polyBoundingBox) {
+      if (
+        config.alwaysShowHandles ||
+        config.keyDown.ctrl ||
+        (data.active && data.polyBoundingBox)
+      ) {
         // Render all handles
         options.handleRadius = config.activeHandleRadius;
         drawHandles(context, eventData, data.handles, color, options);
@@ -883,12 +937,25 @@ function onImageRendered (e) {
       if (data.active && !data.polyBoundingBox) {
         // Draw handle at origin and at mouse if actively drawing
         options.handleRadius = config.activeHandleRadius;
-        drawHandles(context, eventData, config.mouseLocation.handles, color, options);
+        drawHandles(
+          context,
+          eventData,
+          config.mouseLocation.handles,
+          color,
+          options
+        );
         drawHandles(context, eventData, [data.handles[0]], color, options);
       }
 
       // Define variables for the area and mean/standard deviation
-      calculateStatistics(data, element, image, modality, rowPixelSpacing, colPixelSpacing);
+      calculateStatistics(
+        data,
+        element,
+        image,
+        modality,
+        rowPixelSpacing,
+        colPixelSpacing
+      );
 
       // Only render text if polygon ROI has been completed and freehand 'shiftKey' mode was not used:
       if (data.polyBoundingBox && !data.textBox.freehand) {
@@ -897,20 +964,32 @@ function onImageRendered (e) {
         if (!data.textBox.hasMoved) {
           // Find the rightmost side of the polyBoundingBox at its vertical center, and place the textbox here
           // Note that this calculates it in image coordinates
-          data.textBox.x = data.polyBoundingBox.left + data.polyBoundingBox.width;
-          data.textBox.y = data.polyBoundingBox.top + data.polyBoundingBox.height / 2;
+          data.textBox.x =
+            data.polyBoundingBox.left + data.polyBoundingBox.width;
+          data.textBox.y =
+            data.polyBoundingBox.top + data.polyBoundingBox.height / 2;
         }
 
         const text = textBoxText(data);
-        /* Sangkeun Kim */
-//        drawLinkedTextBox(context, element, data.textBox, text,
-//          data.handles, textBoxAnchorPoints, color, lineWidth, 0, true);
+
+        drawLinkedTextBox(
+          context,
+          element,
+          data.textBox,
+          text,
+          data.handles,
+          textBoxAnchorPoints,
+          color,
+          lineWidth,
+          0,
+          true
+        );
       }
     });
   }
 
   function textBoxText (data) {
-    const { meanStdDev, meanStdDevSUV, area } = data;
+    const { meanStdDev, meanStdDevSUV, area, extra } = data;
     // Define an array to store the rows of text for the textbox
     const textLines = [];
 
@@ -924,16 +1003,21 @@ function onImageRendered (e) {
       }
 
       // Create a line of text to display the mean and any units that were specified (i.e. HU)
-      let meanText = `Mean: ${numberWithCommas(meanStdDev.mean.toFixed(2))}${moSuffix}`;
+      let meanText = `Mean: ${numberWithCommas(
+        meanStdDev.mean.toFixed(2)
+      )}${moSuffix}`;
       // Create a line of text to display the standard deviation and any units that were specified (i.e. HU)
-      let stdDevText = `StdDev: ${numberWithCommas(meanStdDev.stdDev.toFixed(2))}${moSuffix}`;
+      let stdDevText = `StdDev: ${numberWithCommas(
+        meanStdDev.stdDev.toFixed(2)
+      )}${moSuffix}`;
 
       // If this image has SUV values to display, concatenate them to the text line
       if (meanStdDevSUV && meanStdDevSUV.mean !== undefined) {
         const SUVtext = ' SUV: ';
 
         meanText += SUVtext + numberWithCommas(meanStdDevSUV.mean.toFixed(2));
-        stdDevText += SUVtext + numberWithCommas(meanStdDevSUV.stdDev.toFixed(2));
+        stdDevText +=
+          SUVtext + numberWithCommas(meanStdDevSUV.stdDev.toFixed(2));
       }
 
       // Add these text lines to the array to be displayed in the textbox
@@ -959,7 +1043,7 @@ function onImageRendered (e) {
       textLines.push(areaText);
     }
 
-    return textLines;
+    return extra ? [extra] : [];
   }
 
   function textBoxAnchorPoints (handles) {
@@ -967,14 +1051,18 @@ function onImageRendered (e) {
   }
 }
 
-
-function calculateStatistics (data, element, image, modality, rowPixelSpacing, columnPixelSpacing) {
+function calculateStatistics (
+  data,
+  element,
+  image,
+  modality,
+  rowPixelSpacing,
+  columnPixelSpacing
+) {
   const cornerstone = external.cornerstone;
 
   // Define variables for the area and mean/standard deviation
-  let area,
-    meanStdDev,
-    meanStdDevSUV;
+  let area, meanStdDev, meanStdDevSUV;
 
   // Perform a check to see if the tool has been invalidated. This is to prevent
   // Unnecessary re-calculation of the area, mean, and standard deviation if the
@@ -1017,10 +1105,20 @@ function calculateStatistics (data, element, image, modality, rowPixelSpacing, c
     // Deviation will be calculated for color images.
     if (!image.color) {
       // Retrieve the array of pixels that the ROI bounds cover
-      const pixels = cornerstone.getPixels(element, polyBoundingBox.left, polyBoundingBox.top, polyBoundingBox.width, polyBoundingBox.height);
+      const pixels = cornerstone.getPixels(
+        element,
+        polyBoundingBox.left,
+        polyBoundingBox.top,
+        polyBoundingBox.width,
+        polyBoundingBox.height
+      );
 
       // Calculate the mean & standard deviation from the pixels and the object shape
-      meanStdDev = calculateFreehandStatistics(pixels, polyBoundingBox, data.handles);
+      meanStdDev = calculateFreehandStatistics(
+        pixels,
+        polyBoundingBox,
+        data.handles
+      );
 
       if (modality === 'PT') {
         // If the image is from a PET scan, use the DICOM tags to
@@ -1031,8 +1129,14 @@ function calculateStatistics (data, element, image, modality, rowPixelSpacing, c
         // Returning the values to storedPixel values before calcuating SUV with them.
         // TODO: Clean this up? Should we add an option to not scale in calculateSUV?
         meanStdDevSUV = {
-          mean: calculateSUV(image, (meanStdDev.mean - image.intercept) / image.slope),
-          stdDev: calculateSUV(image, (meanStdDev.stdDev - image.intercept) / image.slope)
+          mean: calculateSUV(
+            image,
+            (meanStdDev.mean - image.intercept) / image.slope
+          ),
+          stdDev: calculateSUV(
+            image,
+            (meanStdDev.stdDev - image.intercept) / image.slope
+          )
         };
       }
 
@@ -1065,24 +1169,27 @@ function calculateStatistics (data, element, image, modality, rowPixelSpacing, c
 }
 // /////// END IMAGE RENDERING ///////
 /**
-* Attaches event listeners to the element such that is is visible.
-*
-* @param {Object} element - The viewport element to attach event listeners to.
-* @modifies {element}
-*/
+ * Attaches event listeners to the element such that is is visible.
+ *
+ * @param {Object} element - The viewport element to attach event listeners to.
+ * @modifies {element}
+ */
 function enable (element) {
   closeToolIfDrawing(element);
   removeEventListeners(element);
-  element.addEventListener(external.cornerstone.EVENTS.IMAGE_RENDERED, onImageRendered);
+  element.addEventListener(
+    external.cornerstone.EVENTS.IMAGE_RENDERED,
+    onImageRendered
+  );
   external.cornerstone.updateImage(element);
 }
 
 /**
-* Disables the reference line tool for the given element.
-*
-* @param {Object} element - The viewport element to attach event listeners to.
-* @modifies {element}
-*/
+ * Disables the reference line tool for the given element.
+ *
+ * @param {Object} element - The viewport element to attach event listeners to.
+ * @modifies {element}
+ */
 function disable (element) {
   closeToolIfDrawing(element);
   removeEventListeners(element);
@@ -1090,20 +1197,26 @@ function disable (element) {
 }
 
 /**
-* Attaches event listeners to the element such that is is visible, modifiable, and new data can be created.
-*
-* @param {Object} element - The viewport element to attach event listeners to.
-* @modifies {element}
-*/
+ * Attaches event listeners to the element such that is is visible, modifiable, and new data can be created.
+ *
+ * @param {Object} element - The viewport element to attach event listeners to.
+ * @modifies {element}
+ */
 function activate (element, mouseButtonMask) {
   setToolOptions(toolType, element, { mouseButtonMask });
 
   removeEventListeners(element);
 
-  element.addEventListener(external.cornerstone.EVENTS.IMAGE_RENDERED, onImageRendered);
+  element.addEventListener(
+    external.cornerstone.EVENTS.IMAGE_RENDERED,
+    onImageRendered
+  );
   element.addEventListener(EVENTS.MOUSE_MOVE, mouseMoveCallback);
   element.addEventListener(EVENTS.MOUSE_DOWN, mouseDownCallback);
-  element.addEventListener(EVENTS.MOUSE_DOWN_ACTIVATE, mouseDownActivateCallback);
+  element.addEventListener(
+    EVENTS.MOUSE_DOWN_ACTIVATE,
+    mouseDownActivateCallback
+  );
   element.addEventListener(EVENTS.KEY_DOWN, keyDownCallback);
   element.addEventListener(EVENTS.KEY_UP, keyUpCallback);
 
@@ -1111,11 +1224,11 @@ function activate (element, mouseButtonMask) {
 }
 
 /**
-* Attaches event listeners to the element such that is is visible and modifiable.
-*
-* @param {Object} element - The viewport element to attach event listeners to.
-* @modifies {element}
-*/
+ * Attaches event listeners to the element such that is is visible and modifiable.
+ *
+ * @param {Object} element - The viewport element to attach event listeners to.
+ * @modifies {element}
+ */
 function deactivate (element, mouseButtonMask) {
   setToolOptions(toolType, element, { mouseButtonMask });
 
@@ -1131,7 +1244,10 @@ function deactivate (element, mouseButtonMask) {
   closeToolIfDrawing(element);
   removeEventListeners(element);
 
-  element.addEventListener(external.cornerstone.EVENTS.IMAGE_RENDERED, onImageRendered);
+  element.addEventListener(
+    external.cornerstone.EVENTS.IMAGE_RENDERED,
+    onImageRendered
+  );
   element.addEventListener(EVENTS.MOUSE_MOVE, mouseMoveCallback);
   element.addEventListener(EVENTS.MOUSE_DOWN, mouseDownCallback);
   element.addEventListener(EVENTS.KEY_DOWN, keyDownCallback);
@@ -1141,48 +1257,57 @@ function deactivate (element, mouseButtonMask) {
 }
 
 /**
-* Removes event listeners from the element.
-*
-* @param {Object} element - The viewport element to remove event listeners from.
-* @modifies {element}
-*/
+ * Removes event listeners from the element.
+ *
+ * @param {Object} element - The viewport element to remove event listeners from.
+ * @modifies {element}
+ */
 function removeEventListeners (element) {
   element.removeEventListener(EVENTS.MOUSE_DOWN, mouseDownCallback);
-  element.removeEventListener(EVENTS.MOUSE_DOWN_ACTIVATE, mouseDownActivateCallback);
+  element.removeEventListener(
+    EVENTS.MOUSE_DOWN_ACTIVATE,
+    mouseDownActivateCallback
+  );
   element.removeEventListener(EVENTS.MOUSE_DRAG, mouseDragCallback);
   element.removeEventListener(EVENTS.MOUSE_UP, mouseUpCallback);
   element.removeEventListener(EVENTS.MOUSE_MOVE, mouseMoveCallback);
-  element.removeEventListener(external.cornerstone.EVENTS.IMAGE_RENDERED, onImageRendered);
+  element.removeEventListener(
+    external.cornerstone.EVENTS.IMAGE_RENDERED,
+    onImageRendered
+  );
   element.removeEventListener(EVENTS.KEY_DOWN, keyDownCallback);
   element.removeEventListener(EVENTS.KEY_UP, keyUpCallback);
 }
 
-
 /**
- * closeToolIfDrawing - Closes the ROI if the tool is not yet
+ * CloseToolIfDrawing - Closes the ROI if the tool is not yet
  * complete when changing tool mode.
  *
  * @param  {Object} element The element the ROI is associated with.
  */
-function closeToolIfDrawing(element) {
+function closeToolIfDrawing (element) {
   const config = freehand.getConfiguration();
+
   if (config.currentTool >= 0) {
     // Actively drawing but changed mode.
     const lastHandlePlaced = config.currentHandle;
     const enabledElement = external.cornerstone.getEnabledElement(element);
 
-    endDrawing({
-      element,
-      image: enabledElement.image
-    }, lastHandlePlaced);
+    endDrawing(
+      {
+        element,
+        image: enabledElement.image
+      },
+      lastHandlePlaced
+    );
   }
 }
 
 /**
-* Get the configuation object for the freehand tool.
-*
-* @return {Object} configuration - The freehand tool's configuration object.
-*/
+ * Get the configuation object for the freehand tool.
+ *
+ * @return {Object} configuration - The freehand tool's configuration object.
+ */
 function getConfiguration () {
   return configuration;
 }
@@ -1204,11 +1329,11 @@ function fireModifiedEvent (element, data) {
 }
 
 /**
-* Set the configuation object for the freehand tool.
-*
-* @param {Object} config - The configuration object to set the freehand tool's configuration.
-* @returns {void}
-*/
+ * Set the configuation object for the freehand tool.
+ *
+ * @param {Object} config - The configuration object to set the freehand tool's configuration.
+ * @returns {void}
+ */
 function setConfiguration (config) {
   configuration = config;
 }

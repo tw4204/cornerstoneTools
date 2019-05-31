@@ -526,7 +526,8 @@ function onImageRendered(e) {
       textLines.push(extra)
     }
 
-    return textLines
+    return extra ? [extra] : []
+    // return textLines
   }
 
   function textBoxAnchorPoints(handles) {

@@ -117,9 +117,14 @@ function onImageRendered (e) {
   const element = eventData.element;
   const lineWidth = toolStyle.getToolWidth();
   const config = ellipticalRoi.getConfiguration();
-  const seriesModule = cornerstone.metaData.get('generalSeriesModule', image.imageId);
+  const seriesModule = cornerstone.metaData.get(
+    'generalSeriesModule',
+    image.imageId
+  );
   let modality;
-  const { rowPixelSpacing, colPixelSpacing } = getColRowPixelSpacing(eventData.image);
+  const { rowPixelSpacing, colPixelSpacing } = getColRowPixelSpacing(
+    eventData.image
+  );
 
   if (seriesModule) {
     modality = seriesModule.modality;
@@ -143,7 +148,9 @@ function onImageRendered (e) {
       const color = toolColors.getColorIfActive(data);
 
       // Draw the ellipse on the canvas
-      drawEllipse(context, element, data.handles.start, data.handles.end, { color });
+      drawEllipse(context, element, data.handles.start, data.handles.end, {
+        color
+      });
 
       // If the tool configuration specifies to only draw the handles on hover / active,
       // Follow this logic
@@ -165,21 +172,41 @@ function onImageRendered (e) {
         drawHandles(context, eventData, data.handles, color);
       }
 
-      calculateStatistics(data, element, image, modality, rowPixelSpacing, colPixelSpacing);
+      calculateStatistics(
+        data,
+        element,
+        image,
+        modality,
+        rowPixelSpacing,
+        colPixelSpacing
+      );
 
       // If the textbox has not been moved by the user, it should be displayed on the right-most
       // Side of the tool.
       if (!data.handles.textBox.hasMoved) {
         // Find the rightmost side of the ellipse at its vertical center, and place the textbox here
         // Note that this calculates it in image coordinates
-        data.handles.textBox.x = Math.max(data.handles.start.x, data.handles.end.x);
+        data.handles.textBox.x = Math.max(
+          data.handles.start.x,
+          data.handles.end.x
+        );
         data.handles.textBox.y = (data.handles.start.y + data.handles.end.y) / 2;
       }
 
       const text = textBoxText(data);
 
-      drawLinkedTextBox(context, element, data.handles.textBox, text,
-        data.handles, textBoxAnchorPoints, color, lineWidth, 0, true);
+      drawLinkedTextBox(
+        context,
+        element,
+        data.handles.textBox,
+        text,
+        data.handles,
+        textBoxAnchorPoints,
+        color,
+        lineWidth,
+        0,
+        true
+      );
     });
   }
 
@@ -199,16 +226,21 @@ function onImageRendered (e) {
       }
 
       // Create a line of text to display the mean and any units that were specified (i.e. HU)
-      let meanText = `Mean: ${numberWithCommas(meanStdDev.mean.toFixed(2))}${moSuffix}`;
+      let meanText = `Mean: ${numberWithCommas(
+        meanStdDev.mean.toFixed(2)
+      )}${moSuffix}`;
       // Create a line of text to display the standard deviation and any units that were specified (i.e. HU)
-      let stdDevText = `StdDev: ${numberWithCommas(meanStdDev.stdDev.toFixed(2))}${moSuffix}`;
+      let stdDevText = `StdDev: ${numberWithCommas(
+        meanStdDev.stdDev.toFixed(2)
+      )}${moSuffix}`;
 
       // If this image has SUV values to display, concatenate them to the text line
       if (meanStdDevSUV && meanStdDevSUV.mean !== undefined) {
         const SUVtext = ' SUV: ';
 
         meanText += SUVtext + numberWithCommas(meanStdDevSUV.mean.toFixed(2));
-        stdDevText += SUVtext + numberWithCommas(meanStdDevSUV.stdDev.toFixed(2));
+        stdDevText +=
+          SUVtext + numberWithCommas(meanStdDevSUV.stdDev.toFixed(2));
       }
 
       // Add these text lines to the array to be displayed in the textbox
@@ -238,7 +270,8 @@ function onImageRendered (e) {
       textLines.push(extra);
     }
 
-    return textLines;
+    return extra ? [extra] : [];
+    // Return textLines;
   }
 
   function textBoxAnchorPoints (handles) {
@@ -248,33 +281,43 @@ function onImageRendered (e) {
     const width = Math.abs(handles.start.x - handles.end.x);
     const height = Math.abs(handles.start.y - handles.end.y);
 
-    return [{
-      // Top middle point of ellipse
-      x: left + width / 2,
-      y: top
-    }, {
-      // Left middle point of ellipse
-      x: left,
-      y: top + height / 2
-    }, {
-      // Bottom middle point of ellipse
-      x: left + width / 2,
-      y: top + height
-    }, {
-      // Right middle point of ellipse
-      x: left + width,
-      y: top + height / 2
-    }];
+    return [
+      {
+        // Top middle point of ellipse
+        x: left + width / 2,
+        y: top
+      },
+      {
+        // Left middle point of ellipse
+        x: left,
+        y: top + height / 2
+      },
+      {
+        // Bottom middle point of ellipse
+        x: left + width / 2,
+        y: top + height
+      },
+      {
+        // Right middle point of ellipse
+        x: left + width,
+        y: top + height / 2
+      }
+    ];
   }
 }
 // /////// END IMAGE RENDERING ///////
 
-function calculateStatistics (data, element, image, modality, rowPixelSpacing, colPixelSpacing) {
+function calculateStatistics (
+  data,
+  element,
+  image,
+  modality,
+  rowPixelSpacing,
+  colPixelSpacing
+) {
   const cornerstone = external.cornerstone;
   // Define variables for the area and mean/standard deviation
-  let area,
-    meanStdDev,
-    meanStdDevSUV;
+  let area, meanStdDev, meanStdDevSUV;
 
   // Perform a check to see if the tool has been invalidated. This is to prevent
   // Unnecessary re-calculation of the area, mean, and standard deviation if the
@@ -299,7 +342,13 @@ function calculateStatistics (data, element, image, modality, rowPixelSpacing, c
     // Deviation will be calculated for color images.
     if (!image.color) {
       // Retrieve the array of pixels that the ellipse bounds cover
-      const pixels = cornerstone.getPixels(element, ellipse.left, ellipse.top, ellipse.width, ellipse.height);
+      const pixels = cornerstone.getPixels(
+        element,
+        ellipse.left,
+        ellipse.top,
+        ellipse.width,
+        ellipse.height
+      );
 
       // Calculate the mean & standard deviation from the pixels and the ellipse details
       meanStdDev = calculateEllipseStatistics(pixels, ellipse);
@@ -313,8 +362,14 @@ function calculateStatistics (data, element, image, modality, rowPixelSpacing, c
         // Returning the values to storedPixel values before calcuating SUV with them.
         // TODO: Clean this up? Should we add an option to not scale in calculateSUV?
         meanStdDevSUV = {
-          mean: calculateSUV(image, (meanStdDev.mean - image.intercept) / image.slope),
-          stdDev: calculateSUV(image, (meanStdDev.stdDev - image.intercept) / image.slope)
+          mean: calculateSUV(
+            image,
+            (meanStdDev.mean - image.intercept) / image.slope
+          ),
+          stdDev: calculateSUV(
+            image,
+            (meanStdDev.stdDev - image.intercept) / image.slope
+          )
         };
       }
 
@@ -326,7 +381,10 @@ function calculateStatistics (data, element, image, modality, rowPixelSpacing, c
     }
 
     // Calculate the image area from the ellipse dimensions and pixel spacing
-    area = Math.PI * (ellipse.width * (colPixelSpacing || 1) / 2) * (ellipse.height * (rowPixelSpacing || 1) / 2);
+    area =
+      Math.PI *
+      ((ellipse.width * (colPixelSpacing || 1)) / 2) *
+      ((ellipse.height * (rowPixelSpacing || 1)) / 2);
 
     // If the area value is sane, store it for later retrieval
     if (!isNaN(area)) {
@@ -345,7 +403,10 @@ function calculateStatistics (data, element, image, modality, rowPixelSpacing, c
 
 function onHandleDoneMove (element, data) {
   const image = external.cornerstone.getImage(element);
-  const seriesModule = external.cornerstone.metaData.get('generalSeriesModule', image.imageId);
+  const seriesModule = external.cornerstone.metaData.get(
+    'generalSeriesModule',
+    image.imageId
+  );
   let modality;
   const { rowPixelSpacing, colPixelSpacing } = getColRowPixelSpacing(image);
 
@@ -353,7 +414,14 @@ function onHandleDoneMove (element, data) {
     modality = seriesModule.modality;
   }
 
-  calculateStatistics(data, element, image, modality, rowPixelSpacing, colPixelSpacing);
+  calculateStatistics(
+    data,
+    element,
+    image,
+    modality,
+    rowPixelSpacing,
+    colPixelSpacing
+  );
 
   triggerMeasurementCompletedEvent(element, data, toolType);
 }
