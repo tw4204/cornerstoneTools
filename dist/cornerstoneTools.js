@@ -1,4 +1,4 @@
-/*! cornerstone-tools - 2.5.0 - 2019-05-31 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
+/*! cornerstone-tools - 2.5.0 - 2019-06-21 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	}
 /******/
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "cbc0ef80802901ca2eac"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "71c09f948b1ed1ee80cb"; // eslint-disable-line no-unused-vars
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
@@ -18851,7 +18851,7 @@ exports.addStackStateManager = addStackStateManager;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-var defaultFontSize = 15,
+var defaultFontSize = 20,
     defaultFont = defaultFontSize + 'px Arial',
     defaultBackgroundColor = 'transparent';
 

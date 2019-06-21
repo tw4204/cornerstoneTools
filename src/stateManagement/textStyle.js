@@ -1,4 +1,4 @@
-let defaultFontSize = 15,
+let defaultFontSize = 20,
   defaultFont = `${defaultFontSize}px Arial`,
   defaultBackgroundColor = 'transparent';
 
