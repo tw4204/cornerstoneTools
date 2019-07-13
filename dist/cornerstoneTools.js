@@ -1,4 +1,4 @@
-/*! cornerstone-tools - 2.5.0 - 2019-06-21 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
+/*! cornerstone-tools - 2.5.0 - 2019-07-13 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	}
 /******/
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "71c09f948b1ed1ee80cb"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "b893df9a8f781fc48d5e"; // eslint-disable-line no-unused-vars
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
@@ -3101,7 +3101,7 @@ var configuration = {
     ctrl: true,
     alt: false
   },
-  activePencilMode: false,
+  activePencilMode: true,
   spacing: 5,
   activeHandleRadius: 3,
   completeHandleRadius: 6,
@@ -3242,7 +3242,7 @@ function mouseDownActivateCallback(e) {
   }
 
   if (eventData.event.shiftKey) {
-    config.activePencilMode = true;
+    config.activePencilMode = false;
   }
 
   startDrawing(eventData);
@@ -3387,7 +3387,7 @@ function endDrawing(eventData, handleNearby) {
   // Reset the current handle
   config.currentHandle = 0;
   config.currentTool = -1;
-  config.activePencilMode = false;
+  config.activePencilMode = true;
   data.canComplete = false;
 
   if (deleteData) {
@@ -4135,6 +4135,39 @@ function calculateStatistics(data, element, image, modality, rowPixelSpacing, co
     data.invalidated = false;
   }
 }
+
+function completeDrawing(eventData, toolData) {
+  var element = eventData.element;
+  var config = freehand.getConfiguration();
+  var data = toolData.data[config.currentTool];
+  console.log(data);
+  console.log(config);
+  console.log(!_freeHandIntersect2.default.end(data.handles));
+  console.log(config.currentHandle);
+
+  if (!_freeHandIntersect2.default.end(data.handles) && data.handles.length >= 2) {
+    var lastHandlePlaced = config.currentHandle;
+
+    data.polyBoundingBox = {};
+    endDrawing(eventData, lastHandlePlaced);
+  }
+}
+
+function mouseDoubleClick(e) {
+  var eventData = e.detail;
+
+  // If we have no toolData for this element, return immediately as there is nothing to do
+  var toolData = (0, _toolState.getToolState)(e.currentTarget, toolType);
+
+  if (toolData === undefined) {
+    return;
+  }
+
+  completeDrawing(eventData, toolData);
+  e.preventDefault();
+  e.stopPropagation();
+}
+
 // /////// END IMAGE RENDERING ///////
 /**
  * Attaches event listeners to the element such that is is visible.
@@ -4175,6 +4208,7 @@ function activate(element, mouseButtonMask) {
   element.addEventListener(_externalModules2.default.cornerstone.EVENTS.IMAGE_RENDERED, onImageRendered);
   element.addEventListener(_events2.default.MOUSE_MOVE, mouseMoveCallback);
   element.addEventListener(_events2.default.MOUSE_DOWN, mouseDownCallback);
+  element.addEventListener(_events2.default.MOUSE_DOUBLE_CLICK, mouseDoubleClick);
   element.addEventListener(_events2.default.MOUSE_DOWN_ACTIVATE, mouseDownActivateCallback);
   element.addEventListener(_events2.default.KEY_DOWN, _keysHeld.keyDownCallback);
   element.addEventListener(_events2.default.KEY_UP, _keysHeld.keyUpCallback);
@@ -4206,6 +4240,7 @@ function deactivate(element, mouseButtonMask) {
   element.addEventListener(_externalModules2.default.cornerstone.EVENTS.IMAGE_RENDERED, onImageRendered);
   element.addEventListener(_events2.default.MOUSE_MOVE, mouseMoveCallback);
   element.addEventListener(_events2.default.MOUSE_DOWN, mouseDownCallback);
+  element.addEventListener(_events2.default.MOUSE_DOUBLE_CLICK, mouseDoubleClick);
   element.addEventListener(_events2.default.KEY_DOWN, _keysHeld.keyDownCallback);
   element.addEventListener(_events2.default.KEY_UP, _keysHeld.keyUpCallback);
 
@@ -4221,6 +4256,7 @@ function deactivate(element, mouseButtonMask) {
 function removeEventListeners(element) {
   element.removeEventListener(_events2.default.MOUSE_DOWN, mouseDownCallback);
   element.removeEventListener(_events2.default.MOUSE_DOWN_ACTIVATE, mouseDownActivateCallback);
+  element.removeEventListener(_events2.default.MOUSE_DOUBLE_CLICK, mouseDoubleClick);
   element.removeEventListener(_events2.default.MOUSE_DRAG, mouseDragCallback);
   element.removeEventListener(_events2.default.MOUSE_UP, mouseUpCallback);
   element.removeEventListener(_events2.default.MOUSE_MOVE, mouseMoveCallback);

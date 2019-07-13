@@ -45,7 +45,7 @@ let configuration = {
     ctrl: true,
     alt: false
   },
-  activePencilMode: false,
+  activePencilMode: true,
   spacing: 5,
   activeHandleRadius: 3,
   completeHandleRadius: 6,
@@ -192,7 +192,7 @@ function mouseDownActivateCallback (e) {
   }
 
   if (eventData.event.shiftKey) {
-    config.activePencilMode = true;
+    config.activePencilMode = false;
   }
 
   startDrawing(eventData);
@@ -342,7 +342,7 @@ function endDrawing (eventData, handleNearby) {
   // Reset the current handle
   config.currentHandle = 0;
   config.currentTool = -1;
-  config.activePencilMode = false;
+  config.activePencilMode = true;
   data.canComplete = false;
 
   if (deleteData) {
@@ -1167,6 +1167,42 @@ function calculateStatistics (
     data.invalidated = false;
   }
 }
+
+function completeDrawing (eventData, toolData) {
+  const element = eventData.element
+  const config = freehand.getConfiguration();
+  const data = toolData.data[config.currentTool];
+  console.log(data);
+  console.log(config);
+  console.log(!freeHandIntersect.end(data.handles));
+  console.log(config.currentHandle);
+
+  if (
+    !freeHandIntersect.end(data.handles) &&
+    data.handles.length >= 2
+  ) {
+    const lastHandlePlaced = config.currentHandle;
+
+    data.polyBoundingBox = {};
+    endDrawing(eventData, lastHandlePlaced);
+  }
+}
+
+function mouseDoubleClick (e) {
+  const eventData = e.detail;
+
+  // If we have no toolData for this element, return immediately as there is nothing to do
+  const toolData = getToolState(e.currentTarget, toolType);
+
+  if (toolData === undefined) {
+    return;
+  }
+
+  completeDrawing(eventData, toolData);
+  e.preventDefault();
+  e.stopPropagation();
+}
+
 // /////// END IMAGE RENDERING ///////
 /**
  * Attaches event listeners to the element such that is is visible.
@@ -1213,6 +1249,7 @@ function activate (element, mouseButtonMask) {
   );
   element.addEventListener(EVENTS.MOUSE_MOVE, mouseMoveCallback);
   element.addEventListener(EVENTS.MOUSE_DOWN, mouseDownCallback);
+  element.addEventListener(EVENTS.MOUSE_DOUBLE_CLICK, mouseDoubleClick);
   element.addEventListener(
     EVENTS.MOUSE_DOWN_ACTIVATE,
     mouseDownActivateCallback
@@ -1250,6 +1287,7 @@ function deactivate (element, mouseButtonMask) {
   );
   element.addEventListener(EVENTS.MOUSE_MOVE, mouseMoveCallback);
   element.addEventListener(EVENTS.MOUSE_DOWN, mouseDownCallback);
+  element.addEventListener(EVENTS.MOUSE_DOUBLE_CLICK, mouseDoubleClick);
   element.addEventListener(EVENTS.KEY_DOWN, keyDownCallback);
   element.addEventListener(EVENTS.KEY_UP, keyUpCallback);
 
@@ -1268,6 +1306,7 @@ function removeEventListeners (element) {
     EVENTS.MOUSE_DOWN_ACTIVATE,
     mouseDownActivateCallback
   );
+  element.removeEventListener(EVENTS.MOUSE_DOUBLE_CLICK, mouseDoubleClick);
   element.removeEventListener(EVENTS.MOUSE_DRAG, mouseDragCallback);
   element.removeEventListener(EVENTS.MOUSE_UP, mouseUpCallback);
   element.removeEventListener(EVENTS.MOUSE_MOVE, mouseMoveCallback);
