@@ -68,7 +68,7 @@ function createNewMeasurement () {
     visible: true,
     active: true,
     invalidated: true,
-    color: undefined,
+    color: null,
     handles: [],
     textBox: {
       active: false,
@@ -1172,10 +1172,6 @@ function completeDrawing (eventData, toolData) {
   const element = eventData.element
   const config = freehand.getConfiguration();
   const data = toolData.data[config.currentTool];
-  console.log(data);
-  console.log(config);
-  console.log(!freeHandIntersect.end(data.handles));
-  console.log(config.currentHandle);
 
   if (
     !freeHandIntersect.end(data.handles) &&

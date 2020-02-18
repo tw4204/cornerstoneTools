@@ -179,7 +179,7 @@ function pointNearEllipse(element, data, coords, distance) {
     theta
   )
 
-  if (pointInMajorEllipse && !pointInMinorEllipse) {
+  if (pointInMajorEllipse) {
     return true
   }
 
