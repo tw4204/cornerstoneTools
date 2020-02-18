@@ -9,3 +9,5 @@ docs/api.md
 
 ## File Types
 .idea
+
+dist/*

@@ -1,4 +1,4 @@
-/*! cornerstone-tools - 2.5.0 - 2019-07-13 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
+/*! cornerstone-tools - 2.5.0 - 2020-02-18 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	}
 /******/
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "b893df9a8f781fc48d5e"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "93d0812dfb87b18531ec"; // eslint-disable-line no-unused-vars
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
@@ -3079,6 +3079,10 @@ var _FreehandHandleData = __webpack_require__(/*! ../util/freehand/FreehandHandl
 
 var _drawing = __webpack_require__(/*! ../util/drawing.js */ "./util/drawing.js");
 
+var _pointInPolygon = __webpack_require__(/*! ../util/freehand/pointInPolygon.js */ "./util/freehand/pointInPolygon.js");
+
+var _pointInPolygon2 = _interopRequireDefault(_pointInPolygon);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -3124,7 +3128,7 @@ function createNewMeasurement() {
     visible: true,
     active: true,
     invalidated: true,
-    color: undefined,
+    color: null,
     handles: [],
     textBox: {
       active: false,
@@ -3148,14 +3152,10 @@ function createNewMeasurement() {
  * @return {Boolean} True if provided coordinates are near the tool handle; Otherwise, false.
  */
 function pointNearTool(element, data, coords) {
-  var isPointNearTool = pointNearHandle(element, data, coords);
-
-  // JPETTS - if returns index 0, set true (fails first condition as 0 is falsy).
-  if (isPointNearTool !== null) {
-    return true;
-  }
-
-  return false;
+  var handlesCanvas = data.handles.map(function (handle) {
+    return _externalModules2.default.cornerstone.pixelToCanvas(element, handle);
+  });
+  return (0, _pointInPolygon2.default)(handlesCanvas, coords);
 }
 
 /**
@@ -3481,7 +3481,7 @@ function mouseDownCallback(e) {
 function mouseMoveCallback(e) {
   var eventData = e.detail;
   var toolData = (0, _toolState.getToolState)(eventData.element, toolType);
-
+  console.log(e);
   if (!toolData) {
     return;
   }
@@ -4140,10 +4140,6 @@ function completeDrawing(eventData, toolData) {
   var element = eventData.element;
   var config = freehand.getConfiguration();
   var data = toolData.data[config.currentTool];
-  console.log(data);
-  console.log(config);
-  console.log(!_freeHandIntersect2.default.end(data.handles));
-  console.log(config.currentHandle);
 
   if (!_freeHandIntersect2.default.end(data.handles) && data.handles.length >= 2) {
     var lastHandlePlaced = config.currentHandle;
@@ -7889,7 +7885,7 @@ function pointNearEllipse(element, data, coords, distance) {
   var pointInMinorEllipse = (0, _pointInRotatedEllipse2.default)(minorEllipse, centerCanvas, coords, theta);
   var pointInMajorEllipse = (0, _pointInRotatedEllipse2.default)(majorEllipse, centerCanvas, coords, theta);
 
-  if (pointInMajorEllipse && !pointInMinorEllipse) {
+  if (pointInMajorEllipse) {
     return true;
   }
 
@@ -23753,6 +23749,43 @@ function rayFromPointCrosssesLine(point, handleI, handleJ) {
 
   return false;
 }
+
+/***/ }),
+
+/***/ "./util/freehand/pointInPolygon.js":
+/*!*****************************************!*\
+  !*** ./util/freehand/pointInPolygon.js ***!
+  \*****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+exports.default = function (points, coords) {
+  var ok = 0;
+  var x = coords.x,
+      y = coords.y;
+
+  for (var i = 0, j = points.length - 1; i < points.length; j = i, i = i + 1) {
+    if (points[i].x > x && points[j].x > x) {
+      continue;
+    }
+    var aa = points[i].x + (y - points[i].y);
+    var bb = (points[j].y - points[i].y) * (points[j].x - points[i].x);
+    var check = aa / bb < x;
+    if (points[i].y < y && points[j].y >= y) {
+      ok = ok ^ check;
+    } else if (points[j].y < y && points[i].y >= y) {
+      ok = ok ^ check;
+    }
+  }
+  return ok;
+};
 
 /***/ }),
 
