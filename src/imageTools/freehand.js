@@ -70,14 +70,6 @@ function createNewMeasurement () {
     invalidated: true,
     color: null,
     handles: [],
-    textBox: {
-      active: false,
-      hasMoved: false,
-      movesIndependently: false,
-      drawnIndependently: true,
-      allowedOutsideImage: true,
-      hasBoundingBox: true
-    }
   };
 
   return measurementData;
@@ -131,13 +123,6 @@ function pointNearHandle (element, data, coords) {
       config.spacing
     ) {
       return i;
-    }
-  }
-
-  // Check to see if mouse in bounding box of textbox
-  if (data.textBox) {
-    if (pointInsideBoundingBox(data.textBox, coords)) {
-      return data.textBox;
     }
   }
 
@@ -796,13 +781,6 @@ function mouseHover (eventData, toolData) {
       imageNeedsUpdate = true;
     }
 
-    if (data.textBox === true) {
-      if (pointInsideBoundingBox(data.textBox, coords)) {
-        data.active = !data.active;
-        data.highlight = !data.highlight;
-        imageNeedsUpdate = true;
-      }
-    }
   }
 
   return imageNeedsUpdate;
@@ -957,98 +935,9 @@ function onImageRendered (e) {
         colPixelSpacing
       );
 
-      // Only render text if polygon ROI has been completed and freehand 'shiftKey' mode was not used:
-      if (data.polyBoundingBox && !data.textBox.freehand) {
-        // If the textbox has not been moved by the user, it should be displayed on the right-most
-        // Side of the tool.
-        if (!data.textBox.hasMoved) {
-          // Find the rightmost side of the polyBoundingBox at its vertical center, and place the textbox here
-          // Note that this calculates it in image coordinates
-          data.textBox.x =
-            data.polyBoundingBox.left + data.polyBoundingBox.width;
-          data.textBox.y =
-            data.polyBoundingBox.top + data.polyBoundingBox.height / 2;
-        }
-
-        const text = textBoxText(data);
-
-        drawLinkedTextBox(
-          context,
-          element,
-          data.textBox,
-          text,
-          data.handles,
-          textBoxAnchorPoints,
-          color,
-          lineWidth,
-          0,
-          true
-        );
-      }
     });
   }
 
-  function textBoxText (data) {
-    const { meanStdDev, meanStdDevSUV, area, extra } = data;
-    // Define an array to store the rows of text for the textbox
-    const textLines = [];
-
-    // If the mean and standard deviation values are present, display them
-    if (meanStdDev && meanStdDev.mean !== undefined) {
-      // If the modality is CT, add HU to denote Hounsfield Units
-      let moSuffix = '';
-
-      if (modality === 'CT') {
-        moSuffix = ' HU';
-      }
-
-      // Create a line of text to display the mean and any units that were specified (i.e. HU)
-      let meanText = `Mean: ${numberWithCommas(
-        meanStdDev.mean.toFixed(2)
-      )}${moSuffix}`;
-      // Create a line of text to display the standard deviation and any units that were specified (i.e. HU)
-      let stdDevText = `StdDev: ${numberWithCommas(
-        meanStdDev.stdDev.toFixed(2)
-      )}${moSuffix}`;
-
-      // If this image has SUV values to display, concatenate them to the text line
-      if (meanStdDevSUV && meanStdDevSUV.mean !== undefined) {
-        const SUVtext = ' SUV: ';
-
-        meanText += SUVtext + numberWithCommas(meanStdDevSUV.mean.toFixed(2));
-        stdDevText +=
-          SUVtext + numberWithCommas(meanStdDevSUV.stdDev.toFixed(2));
-      }
-
-      // Add these text lines to the array to be displayed in the textbox
-      textLines.push(meanText);
-      textLines.push(stdDevText);
-    }
-
-    // If the area is a sane value, display it
-    if (area) {
-      // Determine the area suffix based on the pixel spacing in the image.
-      // If pixel spacing is present, use millimeters. Otherwise, use pixels.
-      // This uses Char code 178 for a superscript 2
-      let suffix = ` mm${String.fromCharCode(178)}`;
-
-      if (!rowPixelSpacing || !colPixelSpacing) {
-        suffix = ` pixels${String.fromCharCode(178)}`;
-      }
-
-      // Create a line of text to display the area and its units
-      const areaText = `Area: ${numberWithCommas(area.toFixed(2))}${suffix}`;
-
-      // Add this text line to the array to be displayed in the textbox
-      textLines.push(areaText);
-    }
-
-    return extra ? [extra] : [];
-  }
-
-  function textBoxAnchorPoints (handles) {
-    return handles;
-  }
 }
 
 function calculateStatistics (
