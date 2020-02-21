@@ -10,4 +10,4 @@ docs/api.md
 ## File Types
 .idea
 
-dist/*
+dist/*.js*
